@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portafolio | Nicolás</title>
+  <meta name="description" content="Portafolio personal: pasatiempos, intereses, horario, música y contacto">
+
+  <!-- Bootstrap 5 (solo navbar y carrusel) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <!-- Estilos personalizados (después de Bootstrap para poder sobrescribir) -->
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <!-- A. NAVBAR (Bootstrap): hamburguesa visible siempre -->
+  <nav class="navbar sticky-top" aria-label="Navegación principal">
+    <div class="container">
+      <a class="navbar-brand" href="#inicio">Nicolás<span>.</span></a>
+
+      <div class="d-flex align-items-center gap-2 ms-auto">
+        <button type="button" id="btn-tema" class="icon-btn" aria-label="Cambiar modo oscuro" aria-pressed="false">🌙</button>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Abrir menú de navegación">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mb-2">
+          <li class="nav-item"><a class="nav-link" href="#inicio">Inicio</a></li>
+          <li class="nav-item"><a class="nav-link" href="#pasatiempos">Pasatiempos</a></li>
+          <li class="nav-item"><a class="nav-link" href="#intereses">Intereses</a></li>
+          <li class="nav-item"><a class="nav-link" href="#horario">Horario</a></li>
+          <li class="nav-item"><a class="nav-link" href="#musica">Música</a></li>
+          <li class="nav-item"><a class="nav-link" href="#juegos">Juegos</a></li>
+          <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
+          <li class="nav-item"><a class="nav-link" href="#redes">Redes</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- B. CARRUSEL (Bootstrap) -->
+    <div id="inicio" class="carousel slide" data-bs-ride="carousel" aria-label="Galería de imágenes">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#inicio" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Diapositiva 1"></button>
+        <button type="button" data-bs-target="#inicio" data-bs-slide-to="1" aria-label="Diapositiva 2"></button>
+        <button type="button" data-bs-target="#inicio" data-bs-slide-to="2" aria-label="Diapositiva 3"></button>
+      </div>
+
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img src="https://picsum.photos/id/1018/1600/600" class="d-block w-100" alt="Paisaje de montañas">
+          <div class="carousel-caption d-none d-md-block">
+            <h2>Hola, soy Nicolás</h2>
+            <p>Bienvenido a mi portafolio personal.</p>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <img src="https://picsum.photos/id/1015/1600/600" class="d-block w-100" alt="Río entre montañas">
+        </div>
+        <div class="carousel-item">
+          <img src="https://picsum.photos/id/1039/1600/600" class="d-block w-100" alt="Cascada en el bosque">
+        </div>
+      </div>
+
+      <button class="carousel-control-prev" type="button" data-bs-target="#inicio" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#inicio" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Siguiente</span>
+      </button>
+    </div>
+
+    <!-- C. PASATIEMPOS -->
+    <section id="pasatiempos" class="seccion">
+      <div class="contenedor">
+        <div class="seccion-header">
+          <h2>Pasatiempos</h2>
+          <button type="button" class="btn-seccion" aria-expanded="true" aria-controls="cuerpo-pasatiempos" aria-label="Mostrar u ocultar Pasatiempos">☰</button>
+        </div>
+        <div class="seccion-body" id="cuerpo-pasatiempos">
+          <div class="grid grid-img">
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/book?lock=1" alt="Libros" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">📚</span> Leer</h3>
+                <p>Novelas y ensayos para desconectar y aprender algo nuevo.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/camera?lock=2" alt="Cámara fotográfica" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">📷</span> Fotografía</h3>
+                <p>Capturar paisajes y detalles de la ciudad.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/hiking?lock=3" alt="Senderismo en la montaña" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">🥾</span> Senderismo</h3>
+                <p>Caminatas por la montaña los fines de semana.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/landscape?lock=4" alt="Paisaje natural" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">🌄</span> Ver paisajes</h3>
+                <p>Contemplar atardeceres, montañas y lugares tranquilos.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/writing?lock=5" alt="Escribiendo en un cuaderno" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">✍️</span> Escribir historias</h3>
+                <p>Inventar personajes y relatos en mis ratos libres.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/trail?lock=6" alt="Camino para caminar" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">🚶‍♂️</span> Caminatas en solitario</h3>
+                <p>Salir a caminar solo para despejar la mente.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/television?lock=7" alt="Televisión" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">📺</span> Ver videos</h3>
+                <p>Documentales, tutoriales y series para entretenerme.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/headphones?lock=8" alt="Audífonos" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">🎧</span> Escuchar música</h3>
+                <p>Mis listas favoritas para estudiar, trabajar o relajarme.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/videogames?lock=9" alt="Videojuegos" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">🎮</span> Jugar videojuegos</h3>
+                <p>Partidas con amigos y aventuras en solitario.</p>
+              </div>
+            </article>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- D. INTERESES PRODUCTIVOS -->
+    <section id="intereses" class="seccion">
+      <div class="contenedor">
+        <div class="seccion-header">
+          <h2>Intereses Productivos</h2>
+          <button type="button" class="btn-seccion" aria-expanded="true" aria-controls="cuerpo-intereses" aria-label="Mostrar u ocultar Intereses">☰</button>
+        </div>
+        <div class="seccion-body" id="cuerpo-intereses">
+          <div class="grid grid-img">
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/programming?lock=11" alt="Programación" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">💻</span> Programación</h3>
+                <p>Desarrollo web con HTML, CSS y JavaScript.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/filmmaking?lock=12" alt="Edición de video" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">🎬</span> Editar videos</h3>
+                <p>Montaje, cortes y efectos para crear contenido.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/cooking?lock=13" alt="Cocinando" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">🍳</span> Cocinar</h3>
+                <p>Preparar mis propias comidas y probar recetas nuevas.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/shop?lock=14" alt="Tienda y ventas" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">💼</span> Trabajo de ventas</h3>
+                <p>Atención al cliente y venta de productos.</p>
+              </div>
+            </article>
+
+            <article class="tarjeta tarjeta-img">
+              <div class="tarjeta-media">
+                <img src="https://loremflickr.com/400/300/cleaning?lock=15" alt="Limpieza del hogar" width="400" height="300" loading="lazy">
+              </div>
+              <div class="tarjeta-cuerpo">
+                <h3><span class="icono" aria-hidden="true">🧹</span> Limpieza del hogar</h3>
+                <p>Mantener la casa ordenada y organizada.</p>
+              </div>
+            </article>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- E. HORARIO (estilo hoja de cálculo) -->
+    <section id="horario" class="seccion">
+      <div class="contenedor">
+        <div class="seccion-header">
+          <h2>Horario Semanal</h2>
+          <button type="button" class="btn-seccion" aria-expanded="true" aria-controls="cuerpo-horario" aria-label="Mostrar u ocultar Horario">☰</button>
+        </div>
+        <div class="seccion-body" id="cuerpo-horario">
+          <div class="tabla-scroll">
+            <table class="tabla tabla-sheet">
+              <caption class="visually-hidden">Horario de actividades por día y bloque</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Día</th>
+                  <th scope="col">Mañana</th>
+                  <th scope="col">Tarde</th>
+                  <th scope="col">Noche</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Lunes</th><td>Clases</td><td>Almuerzo, Proyecto web, Trabajo</td><td>Estudio</td></tr>
+                <tr><th scope="row">Martes</th><td>Clases</td><td>Almuerzo, Práctica de código, Trabajo</td><td>Lectura</td></tr>
+                <tr><th scope="row">Miércoles</th><td>Clases</td><td>Almuerzo, Proyecto web, Trabajo</td><td>Ejercicio</td></tr>
+                <tr><th scope="row">Jueves</th><td>Clases</td><td>Almuerzo, Lectura, Trabajo</td><td>Lectura</td></tr>
+                <tr><th scope="row">Viernes</th><td>Clases</td><td>Almuerzo, Videojuegos, Trabajo</td><td>Descanso</td></tr>
+                <tr><th scope="row">Sábado</th><td>Almuerzo, Senderismo, Trabajo</td><td>Almuerzo, Fotografía, Trabajo</td><td>Trabajo</td></tr>
+                <tr><th scope="row">Domingo</th><td>Almuerzo, Familia, Trabajo</td><td>Almuerzo, Planificar la semana</td><td>Videojuegos</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- F. MÚSICA (YouTube con iframe) -->
+    <section id="musica" class="seccion">
+      <div class="contenedor">
+        <div class="seccion-header">
+          <h2>Mi Música</h2>
+          <button type="button" class="btn-seccion" aria-expanded="true" aria-controls="cuerpo-musica" aria-label="Mostrar u ocultar Música">☰</button>
+        </div>
+        <div class="seccion-body" id="cuerpo-musica">
+
+          <!-- Filtro principal: género -->
+          <div class="filtros" role="group" aria-label="Filtrar música por género">
+            <button type="button" class="filtro filtro-genero active" data-filtro="todos">Todos</button>
+            <button type="button" class="filtro filtro-genero" data-filtro="romantica">Romántica</button>
+            <button type="button" class="filtro filtro-genero" data-filtro="rock">Rock</button>
+            <button type="button" class="filtro filtro-genero" data-filtro="pop">Pop</button>
+            <button type="button" class="filtro filtro-genero" data-filtro="electronica">Electrónica</button>
+          </div>
+
+          <!-- Filtro secundario: artistas (los botones los crea el JS según el género) -->
+          <div class="filtros filtros-artistas" id="filtros-artistas" role="group" aria-label="Filtrar música por artista" hidden></div>
+
+          <div class="grid grid-musica">
+
+            <article class="tarjeta cancion" data-genero="romantica" data-artista="chayanne">
+              <div class="video">
+                <iframe
+                  src="https://www.youtube.com/embed/GuZzuQvv7uc"
+                  title="Chayanne - Torero"
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen></iframe>
+              </div>
+              <h3>Torero</h3>
+              <p>Chayanne · Romántica</p>
+            </article>
+
+            <article class="tarjeta cancion" data-genero="romantica" data-artista="chayanne">
+              <div class="video">
+                <iframe
+                  src="https://www.youtube.com/embed/KYZlT2iYRh8"
+                  title="Chayanne - Un Siglo Sin Ti"
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen></iframe>
+              </div>
+              <h3>Un Siglo Sin Ti</h3>
+              <p>Chayanne · Romántica</p>
+            </article>
+
+            <article class="tarjeta cancion" data-genero="romantica" data-artista="ricardo-arjona">
+              <div class="video">
+                <iframe
+                  src="https://www.youtube.com/embed/By4Vl2zJZlw"
+                  title="Ricardo Arjona - Te Conozco"
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen></iframe>
+              </div>
+              <h3>Te Conozco</h3>
+              <p>Ricardo Arjona · Romántica</p>
+            </article>
+
+            <article class="tarjeta cancion" data-genero="rock" data-artista="queen">
+              <div class="video">
+                <iframe
+                  src="https://www.youtube.com/embed/fJ9rUzIMcZQ"
+                  title="Queen - Bohemian Rhapsody"
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen></iframe>
+              </div>
+              <h3>Bohemian Rhapsody</h3>
+              <p>Queen · Rock</p>
+            </article>
+
+            <article class="tarjeta cancion" data-genero="rock" data-artista="nirvana">
+              <div class="video">
+                <iframe
+                  src="https://www.youtube.com/embed/hTWKbfoikeg"
+                  title="Nirvana - Smells Like Teen Spirit"
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen></iframe>
+              </div>
+              <h3>Smells Like Teen Spirit</h3>
+              <p>Nirvana · Rock</p>
+            </article>
+
+            <article class="tarjeta cancion" data-genero="pop" data-artista="ed-sheeran">
+              <div class="video">
+                <iframe
+                  src="https://www.youtube.com/embed/JGwWNGJdvx8"
+                  title="Ed Sheeran - Shape of You"
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen></iframe>
+              </div>
+              <h3>Shape of You</h3>
+              <p>Ed Sheeran · Pop</p>
+            </article>
+
+            <article class="tarjeta cancion" data-genero="electronica" data-artista="daft-punk">
+              <div class="video">
+                <iframe
+                  src="https://www.youtube.com/embed/h5EofwRzit0"
+                  title="Daft Punk - Get Lucky"
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen></iframe>
+              </div>
+              <h3>Get Lucky</h3>
+              <p>Daft Punk · Electrónica</p>
+            </article>
+
+            <article class="tarjeta cancion" data-genero="electronica" data-artista="avicii">
+              <div class="video">
+                <iframe
+                  src="https://www.youtube.com/embed/_ovdm2yX4MA"
+                  title="Avicii - Levels"
+                  loading="lazy"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen></iframe>
+              </div>
+              <h3>Levels</h3>
+              <p>Avicii · Electrónica</p>
+            </article>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- G. JUEGOS FAVORITOS -->
+    <section id="juegos" class="seccion">
+      <div class="contenedor">
+        <div class="seccion-header">
+          <h2>Juegos Favoritos</h2>
+          <button type="button" class="btn-seccion" aria-expanded="true" aria-controls="cuerpo-juegos" aria-label="Mostrar u ocultar Juegos">☰</button>
+        </div>
+        <div class="seccion-body" id="cuerpo-juegos">
+          <div class="filtros" role="group" aria-label="Filtrar juegos por categoría">
+            <button type="button" class="filtro filtro-juego active" data-filtro="todos">Todos</button>
+            <button type="button" class="filtro filtro-juego" data-filtro="shooter">Shooter</button>
+            <button type="button" class="filtro filtro-juego" data-filtro="rpg">RPG</button>
+            <button type="button" class="filtro filtro-juego" data-filtro="fantasia">Fantasía</button>
+            <button type="button" class="filtro filtro-juego" data-filtro="terror">Terror</button>
+          </div>
+
+          <div class="tabla-scroll">
+            <table class="tabla" id="tabla-juegos">
+              <thead>
+                <tr>
+                  <th scope="col">Título</th>
+                  <th scope="col">Plataforma</th>
+                  <th scope="col">Género</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-categoria="shooter"><td>Counter-Strike 2</td><td>PC</td><td>Shooter</td></tr>
+                <tr data-categoria="shooter"><td>Valorant</td><td>PC</td><td>Shooter</td></tr>
+                <tr data-categoria="rpg"><td>The Witcher 3</td><td>PC</td><td>RPG</td></tr>
+                <tr data-categoria="rpg"><td>Elden Ring</td><td>PC</td><td>RPG</td></tr>
+                <tr data-categoria="fantasia"><td>Zelda: Breath of the Wild</td><td>Nintendo Switch</td><td>Fantasía</td></tr>
+                <tr data-categoria="fantasia"><td>The Elder Scrolls V: Skyrim</td><td>PC</td><td>Fantasía</td></tr>
+                <tr data-categoria="fantasia"><td>Final Fantasy VII Remake</td><td>PlayStation 5</td><td>Fantasía</td></tr>
+                <tr data-categoria="terror"><td>Left 4 Dead</td><td>PC</td><td>Terror</td></tr>
+                <tr data-categoria="terror"><td>Resident Evil 4</td><td>PC</td><td>Terror</td></tr>
+                <tr data-categoria="terror"><td>Dead Space</td><td>PC</td><td>Terror</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- H. FRASE MOTIVACIONAL -->
+    <section class="frase" aria-label="Frase motivacional">
+      <div class="contenedor">
+        <blockquote>“La constancia convierte los pequeños pasos en grandes logros.”</blockquote>
+      </div>
+    </section>
+
+    <!-- I. CONTACTO -->
+    <section id="contacto" class="seccion">
+      <div class="contenedor contenedor-form">
+        <div class="seccion-header">
+          <h2>Contacto</h2>
+          <button type="button" class="btn-seccion" aria-expanded="true" aria-controls="cuerpo-contacto" aria-label="Mostrar u ocultar Contacto">☰</button>
+        </div>
+        <div class="seccion-body" id="cuerpo-contacto">
+          <form id="form-contacto" novalidate>
+            <div class="campo">
+              <label for="nombre">Nombre</label>
+              <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" autocomplete="name">
+              <!-- Mensaje de error en tiempo real -->
+              <div class="msg-campo" id="error-nombre" aria-live="polite"></div>
+            </div>
+
+            <div class="campo">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="tu@correo.com" autocomplete="email">
+              <div class="msg-campo" id="error-email" aria-live="polite"></div>
+            </div>
+
+            <div class="campo">
+              <label for="mensaje">Mensaje</label>
+              <textarea id="mensaje" name="mensaje" rows="4" placeholder="Escribe tu mensaje"></textarea>
+              <div class="msg-campo" id="error-mensaje" aria-live="polite"></div>
+            </div>
+
+            <button type="submit" class="boton">Enviar</button>
+          </form>
+
+          <!-- Contenedor de alertas (mensaje de éxito en verde) -->
+          <div id="resultado-form" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- J. REDES SOCIALES -->
+    <section id="redes" class="redes">
+      <div class="contenedor">
+        <h2>Redes</h2>
+        <a class="red-link" href="https://www.facebook.com/nicolasbenjamin.villegasherrera.3" target="_blank" rel="noopener noreferrer" aria-label="Mi perfil de Facebook">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/>
+          </svg>
+          <span>Facebook</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- K. FOOTER -->
+  <footer class="footer">
+    <div class="contenedor">
+      <p>© 2026 Nicolás · Diseño Web II</p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS (bundle) al final del body -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
