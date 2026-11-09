@@ -1,30 +1,783 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>La Historia de Shrek</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberZone Café | Reservas</title>
+  
+  <!-- Fuentes de Google -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- jQuery (CDN) - Cargado en el HEAD como indica la rúbrica -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <style>
+    /* =========================================
+       VARIABLES Y ESTILOS BASE
+       ========================================= */
+    :root {
+      --bg: #07080d;
+      --panel-bg: #11131c;
+      --card-bg: #1a1d2b;
+      --border: #2a2e42;
+      --cyan: #00f0ff;
+      --magenta: #ff00aa;
+      --green: #39ff14;
+      --yellow: #ffd700;
+      --text: #ffffff;
+      --muted: #8b8e9f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body { 
+      background: var(--bg); color: var(--text); font-family: 'Rajdhani', sans-serif; 
+      height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+    }
+    
+    h1, h2, h3 { font-family: 'Orbitron', sans-serif; }
+    button { font-family: 'Rajdhani', sans-serif; cursor: pointer; transition: 0.3s; }
+
+    /* =========================================
+       NAVBAR
+       ========================================= */
+    #navbar { 
+      height: 70px; background: #090a10; border-bottom: 2px solid var(--border); 
+      display: flex; justify-content: space-between; align-items: center; padding: 0 20px; flex-shrink: 0; position: relative; z-index: 100;
+    }
+    .nav-left { display: flex; align-items: center; gap: 15px; }
+    .hamburger { background: transparent; border: 1px solid var(--border); color: var(--cyan); font-size: 1.2rem; padding: 5px 12px; border-radius: 6px; }
+    .hamburger:hover { background: var(--card-bg); }
+    .logo { font-family: 'Orbitron'; font-size: 1.5rem; color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
+    .logo span { color: var(--magenta); text-shadow: 0 0 10px var(--magenta); }
+    .status-indicator { color: var(--green); font-size: 0.9rem; text-align: right; line-height: 1.2; font-weight: 700; }
+
+    /* MENU HAMBURGUESA */
+    .mobile-menu { 
+      display: none; position: absolute; top: 70px; left: 20px; 
+      background: var(--panel-bg); border: 1px solid var(--cyan); 
+      border-radius: 8px; width: 220px; z-index: 200; box-shadow: 0 0 20px rgba(0,240,255,0.2);
+    }
+    .mobile-menu.active { display: block; }
+    .mobile-menu a { display: block; padding: 12px 15px; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); font-weight: 600; }
+    .mobile-menu a:hover { background: var(--card-bg); color: var(--cyan); }
+    .menu-dropdown { position: relative; }
+    .dropdown-content { display: none; background: #000; padding-left: 15px; }
+    .menu-dropdown:hover .dropdown-content { display: block; }
+    .dropdown-content a { font-size: 0.9rem; border-bottom: none; color: var(--muted); }
+
+    /* =========================================
+       SELECTOR CENTRAL CON IMÁGENES
+       ========================================= */
+    .main-selector {
+      flex: 1; display: flex; justify-content: center; align-items: center; gap: 30px; padding: 40px;
+      background: radial-gradient(circle at center, #11131c 0%, #07080d 100%);
+    }
+    .selector-card {
+      width: 280px; height: 400px; border-radius: 12px; overflow: hidden; position: relative;
+      cursor: pointer; border: 2px solid var(--border); transition: 0.4s;
+    }
+    .selector-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; transition: 0.4s; }
+    .selector-card:hover { transform: translateY(-10px); border-color: var(--cyan); box-shadow: 0 0 30px rgba(0,240,255,0.4); }
+    .selector-card:hover img { opacity: 1; transform: scale(1.05); }
+    .selector-overlay {
+      position: absolute; inset: 0; display: flex; justify-content: center; align-items: center;
+      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    }
+    .selector-overlay h2 { color: var(--cyan); font-size: 1.8rem; text-shadow: 0 0 15px var(--cyan); letter-spacing: 2px; }
+
+    /* =========================================
+       DASHBOARD (VISTA INTERNA)
+       ========================================= */
+    .dashboard-container {
+      flex: 1; display: grid; grid-template-columns: 1fr 380px; gap: 15px; padding: 15px; overflow: hidden;
+    }
+    .btn-back { background: transparent; border: 1px solid var(--muted); color: #fff; padding: 5px 10px; border-radius: 4px; margin-bottom: 10px; width: fit-content; }
+    .btn-back:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .panel { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; overflow: hidden; }
+    .panel h2 { font-size: 1.1rem; margin-bottom: 10px; color: #fff; }
+
+    .promo-banner { background: linear-gradient(90deg, #ff00aa33, #00f0ff33); border: 1px solid var(--magenta); color: #fff; padding: 8px 15px; border-radius: 8px; text-align: center; font-weight: 600; margin-bottom: 10px; font-size: 0.9rem; }
+    .platform-promo { background: var(--card-bg); border-left: 4px solid var(--yellow); padding: 8px 15px; border-radius: 4px; margin-bottom: 15px; font-size: 0.85rem; color: #ccc; }
+    .platform-promo strong { color: var(--yellow); }
+
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+    .search-box input { background: var(--card-bg); border: 1px solid var(--border); color: #fff; padding: 8px 15px; border-radius: 20px; width: 200px; outline: none; }
+
+    /* FILTROS DE GÉNERO */
+    .filter-tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+    .tab { background: var(--card-bg); border: 1px solid var(--border); color: var(--muted); padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; }
+    .tab:hover { border-color: var(--cyan); color: var(--cyan); }
+    .tab.active { background: var(--cyan); color: #000; border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.4); }
+
+    .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; overflow-y: auto; padding-right: 5px; }
+    .game-grid::-webkit-scrollbar { width: 6px; }
+    .game-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    /* CARDS (Máquinas y Juegos) */
+    .card { background: var(--card-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); position: relative; transition: 0.3s; display: flex; flex-direction: column; }
+    .card:hover { transform: translateY(-3px); border-color: var(--cyan); }
+    .card img { width: 100%; height: 180px; object-fit: cover; }
+    .card-info { padding: 10px; flex: 1; display: flex; flex-direction: column; }
+    .card-info h3 { font-size: 0.9rem; margin-bottom: 4px; }
+    .card-info p { font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; }
+
+    /* ETIQUETAS EN CATÁLOGO */
+    .platform-tag { position: absolute; top: 8px; right: 8px; background: #000; border: 1px solid var(--cyan); color: var(--cyan); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; z-index: 10; }
+    .genre-badge { background: #2a2e42; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; display: inline-block; margin-bottom: 8px; width: fit-content; text-transform: uppercase; }
+
+    .status-badge { position: absolute; top: 8px; right: 8px; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+    .status-libre { background: var(--green); color: #000; box-shadow: 0 0 10px var(--green); }
+    .status-ocupado { background: #ff5252; color: #fff; box-shadow: 0 0 10px #ff5252; }
+
+    .btn-play { width: 100%; padding: 8px; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); border-radius: 4px; font-weight: 700; margin-top: auto; }
+    .btn-play:hover:not(:disabled) { background: var(--cyan); color: #000; }
+    .btn-play:disabled { border-color: #444; color: #666; cursor: not-allowed; background: #222; }
+
+    /* SIDEBAR BITÁCORA */
+    .sidebar { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+    .resumen-panel { flex: 1; }
+    .resumen-lista { list-style: none; overflow-y: auto; flex: 1; }
+    .resumen-lista::-webkit-scrollbar { width: 4px; }
+    .resumen-lista::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .log-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid var(--cyan); }
+    .log-item h4 { font-size: 0.95rem; color: #fff; margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .log-item .user { font-size: 0.85rem; color: var(--magenta); font-weight: bold; margin-bottom: 6px; }
+    .log-item .details { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+    .log-item .timer-box { background: #000; padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; text-align: center; color: var(--yellow); border: 1px solid var(--border); }
+    .log-item .timer-box.activo { color: var(--green); border-color: var(--green); }
+    .log-item .timer-box.espera { color: var(--cyan); }
+    .log-item .timer-box.terminado { color: #ff5252; border-color: #ff5252; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 15px;}
+    .modal-box { background: var(--panel-bg); border: 1px solid var(--cyan); border-radius: 12px; padding: 25px; width: 100%; max-width: 400px; position: relative; max-height: 90vh; overflow-y: auto; }
+    .modal-close { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+    .modal-box h2 { font-size: 1.2rem; margin-bottom: 15px; color: var(--cyan); }
+    .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+    .form-group label { font-size: 0.85rem; color: var(--muted); font-weight: 700; }
+    .form-group input, .form-group select { background: var(--card-bg); border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 6px; outline: none; font-family: 'Rajdhani'; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--cyan); }
+
+    /* ESTILOS DE ERROR EN EL MODAL */
+    .error-msg { color: #ff5252; font-size: 0.8rem; display: none; font-weight: 600; margin-top: 2px; }
+    .input-error { border-color: #ff5252 !important; box-shadow: 0 0 10px rgba(255,82,82,0.3) !important; }
+
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-actions button { flex: 1; padding: 10px; border-radius: 6px; font-weight: 700; }
+    .btn-secondary { background: transparent; border: 1px solid var(--muted); color: #fff; }
+    .btn-primary { background: var(--cyan); border: none; color: #000; }
+
+    /* TOAST */
+    .toast { position: fixed; top: 20px; right: 20px; background: #0a2a0a; border: 1px solid var(--green); border-radius: 8px; padding: 15px 20px; display: flex; align-items: center; gap: 15px; z-index: 2000; }
+    .toast-icon { background: var(--green); color: #000; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+    .toast-content strong { color: var(--green); font-size: 0.95rem; }
+
+    /* =========================================
+       MEDIA QUERIES (RESPONSIVE)
+       ========================================= */
+    @media (max-width: 1024px) {
+      body { height: auto; overflow-y: auto; overflow-x: hidden; }
+      .dashboard-container { grid-template-columns: 1fr; height: auto; overflow: visible; }
+      .sidebar { height: auto; overflow: visible; }
+      .game-grid { overflow-y: visible; max-height: none; }
+      .resumen-lista { overflow-y: visible; max-height: none; }
+      .main-selector { flex-wrap: wrap; padding: 20px; height: auto; }
+      .selector-card { width: 45%; height: 250px; }
+    }
+
+    @media (max-width: 768px) {
+      .nav-left .logo { font-size: 1.2rem; }
+      .nav-right .status-indicator { font-size: 0.8rem; }
+      .selector-card { width: 100%; height: 200px; }
+      .panel-header { flex-direction: column; align-items: flex-start; }
+      .search-box input { width: 100%; }
+      .modal-box { padding: 15px; }
+      .form-row { flex-direction: column; gap: 0; }
+      .toast { width: calc(100% - 40px); left: 20px; right: 20px; top: 10px; }
+    }
+  </style>
 </head>
 <body>
 
-    <center>
-        <h1>Shrek y el Pantano</h1>
-    </center>
+  <!-- NAVBAR -->
+  <header id="navbar">
+    <div class="nav-left">
+      <button class="hamburger" id="hamburger">☰</button>
+      <div class="logo">⚡ CyberZone <span>Café</span></div>
+    </div>
 
-    <p>Había una vez, en un pantano muy lejano, vivía un ogro verde, gruñón y solitario llamado <strong>Shrek</strong>. Su preciada tranquilidad se vio interrumpida cuando un malvado Lord llamado Farquaad exilió a todas las criaturas de los cuentos de hadas hacia su pantano.</p>
+    <!-- Menú Hamburguesa -->
+    <nav class="mobile-menu" id="mobileMenu">
+      <a href="#" class="menu-link" data-section="inicio">🏠 Inicio</a>
+      <a href="#" class="menu-link" data-section="catalogo">🛒 Catálogo de Juegos</a>
+      <div class="menu-dropdown">
+        <a href="#" class="menu-link">✉️ Contacto ▼</a>
+        <div class="dropdown-content">
+          <a href="#">Facebook</a>
+          <a href="#">Instagram</a>
+          <a href="#">WhatsApp</a>
+          <a href="#">TikTok</a>
+        </div>
+      </div>
+    </nav>
 
-    <p>Decidido a recuperar su hogar, Shrek hizo un trato con Farquaad para rescatar a la valiente Princesa Fiona de una torre custodiada por un dragón. Lo que Shrek no sabía es que en este viaje encontraría a su mejor amigo, un burro parlanchín, y encontraría el verdadero amor.</p>
+    <div class="nav-right">
+      <div class="status-indicator">🟢 Abierto <br><span id="reloj">00:00:00</span></div>
+    </div>
+  </header>
 
-    <br>
+  <!-- SELECTOR CENTRAL -->
+  <section class="main-selector" id="mainSelector">
+    <div class="selector-card" data-platform="pc">
+      <img src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600" alt="PC Gamer">
+      <div class="selector-overlay"><h2>PC GAMER</h2></div>
+    </div>
+    <div class="selector-card" data-platform="play">
+      <img src="https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=600" alt="PlayStation">
+      <div class="selector-overlay"><h2>PLAYSTATION</h2></div>
+    </div>
+    <div class="selector-card" data-platform="arcade">
+      <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600" alt="Arcade">
+      <div class="selector-overlay"><h2>ARCADE</h2></div>
+    </div>
+    <div class="selector-card" data-platform="catalogo">
+      <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=600" alt="Catálogo">
+      <div class="selector-overlay"><h2>CATÁLOGO</h2></div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <main class="dashboard-container" id="dashboardContainer" style="display:none;">
     
-    <center>
-        <h3>Haz clic en la imagen para saber más sobre Shrek:</h3>
-        
-        <!-- Etiqueta para mostrar una imagen que funciona como enlace -->
-        <a href="https://es.wikipedia.org/wiki/Shrek_(franquicia)" target="_blank">
-            <img src="https://share.google/CZccfalqWhhPxcMbK" alt="Shrek" width="300">
-        </a>
-    </center>
+    <section class="panel main-panel">
+      <button id="btnVolver" class="btn-back">⬅ Volver al menú principal</button>
+      
+      <div class="promo-banner">
+        🎉 ¡Celebra tu cumpleaños con nosotros! Presenta tu CI y obtén <strong>5 HORAS GRATIS</strong>.
+      </div>
 
+      <div class="panel-header">
+        <h2 id="section-title">Máquinas PC Gamer</h2>
+        <div class="search-box" id="searchContainer" style="display:none;">
+          <input type="text" id="searchGame" placeholder="🔍 Buscar juego...">
+        </div>
+      </div>
+
+      <div class="filter-tabs" id="filterContainer" style="display:none;">
+        <button class="tab active" data-genre="all">Todos</button>
+        <button class="tab" data-genre="fps">FPS</button>
+        <button class="tab" data-genre="moba">MOBA</button>
+        <button class="tab" data-genre="rpg">RPG</button>
+        <button class="tab" data-genre="deportes">Deportes</button>
+        <button class="tab" data-genre="accion">Acción</button>
+        <button class="tab" data-genre="battle">Battle Royale</button>
+        <button class="tab" data-genre="arcade">Arcade / Retro</button>
+      </div>
+
+      <div class="platform-promo" id="platformPromo"></div>
+      <div class="game-grid" id="contentGrid"></div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="panel resumen-panel">
+        <h2>📋 Bitácora de Reservas</h2>
+        <ul id="bitacoraLista" class="resumen-lista">
+          <li class="empty">No hay reservas activas</li>
+        </ul>
+      </section>
+    </aside>
+  </main>
+
+  <!-- MODAL DE RESERVA -->
+  <div id="modalReserva" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <button class="modal-close" id="modalClose">×</button>
+      <h2 id="modalTitle">Alquilar Máquina</h2>
+      
+      <div class="form-group">
+        <label>Nombre de la persona:</label>
+        <input type="text" id="inputNombre" placeholder="Ej. Juan Pérez">
+        <small id="errorNombre" class="error-msg">Solo se permiten letras y espacios.</small>
+      </div>
+
+      <!-- CONTROLES EXTRA (Solo para PlayStation) -->
+      <div class="form-group" id="controlesGroup" style="display:none;">
+        <label>Cantidad de Controles (Máx 4):</label>
+        <select id="selectControles">
+          <option value="1">1 Control (Incluido)</option>
+          <option value="2">2 Controles (+ BOB 5)</option>
+          <option value="3">3 Controles (+ BOB 10)</option>
+          <option value="4">4 Controles (+ BOB 15)</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hora de inicio:</label>
+          <select id="selectHoraInicio">
+            <option value="14:00">14:00</option>
+            <option value="15:00">15:00</option>
+            <option value="16:00">16:00</option>
+            <option value="17:00">17:00</option>
+            <option value="18:00">18:00</option>
+            <option value="19:00">19:00</option>
+            <option value="20:00">20:00</option>
+            <option value="21:00">21:00</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Horas a reservar (1-5):</label>
+          <input type="number" id="inputHorasReserva" value="1" min="1" max="5">
+          <small id="errorHoras" class="error-msg">Máximo 5 horas.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Combo Snacks (Opcional):</label>
+        <select id="selectComboReserva">
+          <option value="0">Sin combo</option>
+          <option value="20">Combo 1 (Gaseosa + Snacks) - BOB 20</option>
+          <option value="35">Combo 2 (Hamburguesa + Bebida) - BOB 35</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnCancelarModal">Cancelar</button>
+        <button class="btn-primary" id="btnConfirmarReserva">Confirmar Reserva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST ALERT -->
+  <div id="toastAlert" class="toast" style="display:none">
+    <div class="toast-icon">✓</div>
+    <div class="toast-content">
+      <strong>¡Reserva exitosa!</strong>
+      <p id="toastMsg">Máquina reservada.</p>
+    </div>
+  </div>
+
+  <!-- =========================================
+       LÓGICA DE JQUERY
+       ========================================= -->
+  <script>
+    $(document).ready(function() {
+      
+      // BASE DE DATOS
+      const db = {
+        pc: {
+          nombre: "PC Gamer",
+          promo: "🔥 <strong>2x1 en horas</strong> los días Martes de 14:00 a 18:00.",
+          maquinas: [
+            { id: "pc-1", nombre: "Estación 01 - RTX 4060", precio: 15, img: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400" },
+            { id: "pc-2", nombre: "Estación 02 - RTX 4060", precio: 15, img: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=400" },
+            { id: "pc-3", nombre: "Estación 03 - RTX 4070", precio: 20, img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400" },
+            { id: "pc-4", nombre: "Estación 04 - RTX 4070", precio: 20, img: "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400" }
+          ]
+        },
+        play: {
+          nombre: "PlayStation",
+          promo: "🎮 <strong>Jueves de torneo:</strong> Gana 1 hora gratis si vences al staff.",
+          maquinas: [
+            { id: "ps5-1", nombre: "Consola PS5 #1", precio: 20, img: "https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=400" },
+            { id: "ps5-2", nombre: "Consola PS5 #2", precio: 20, img: "https://images.unsplash.com/photo-1607853202273-797f1c22a38e?w=400" },
+            { id: "ps4-1", nombre: "Consola PS4 #1", precio: 15, img: "https://images.unsplash.com/photo-1507457379470-08b800bebc67?w=400" },
+            { id: "ps4-2", nombre: "Consola PS4 #2", precio: 15, img: "https://images.unsplash.com/photo-1507457379470-08b800bebc67?w=400" }
+          ]
+        },
+        arcade: {
+          nombre: "Arcade",
+          promo: "🕹️ <strong>Viernes Locos:</strong> 10 fichas extra por cada hora de alquiler.",
+          maquinas: [
+            { id: "arc-1", nombre: "Máquina Arcade Retro", precio: 10, img: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400" },
+            { id: "arc-2", nombre: "Máquina Arcade Baile", precio: 12, img: "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400" }
+          ]
+        },
+        catalogo: {
+          nombre: "Catálogo",
+          juegos: [
+            { nombre: "Valorant", genero: "fps", plataforma: "pc", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1172470/header.jpg" },
+            { nombre: "League of Legends", genero: "moba", plataforma: "pc", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1269260/header.jpg" },
+            { nombre: "CS:GO 2", genero: "fps", plataforma: "pc", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg" },
+            { nombre: "GTA V", genero: "accion", plataforma: "pc", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg" },
+            { nombre: "Elden Ring", genero: "rpg", plataforma: "pc", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg" },
+            { nombre: "Fortnite", genero: "battle", plataforma: "pc", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1517290/header.jpg" },
+            { nombre: "God of War", genero: "accion", plataforma: "ps4/ps5", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/2322010/header.jpg" },
+            { nombre: "Spider-Man 2", genero: "accion", plataforma: "ps5", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/2651280/header.jpg" },
+            { nombre: "EA FC 24", genero: "deportes", plataforma: "ps4/ps5", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/2195250/header.jpg" },
+            { nombre: "Warzone", genero: "battle", plataforma: "ps4/ps5", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1938090/header.jpg" },
+            { nombre: "Street Fighter 6", genero: "accion", plataforma: "arcade", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1364780/header.jpg" },
+            { nombre: "Tekken 8", genero: "accion", plataforma: "arcade", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/1778820/header.jpg" },
+            { nombre: "Pac-Man", genero: "arcade", plataforma: "arcade", img: "https://upload.wikimedia.org/wikipedia/en/thumb/6/6c/Pac-Man_Coverart.jpg/220px-Pac-Man_Coverart.jpg" },
+            { nombre: "Metal Slug", genero: "arcade", plataforma: "arcade", img: "https://cdn.cloudflare.steamstatic.com/steam/apps/366250/header.jpg" }
+          ]
+        }
+      };
+
+      let currentPlatform = 'pc';
+      let reservas = []; 
+      let maquinaSeleccionada = null;
+      let currentGenre = 'all';
+
+      // RELOJ Y TIEMPO
+      setInterval(() => {
+        $('#reloj').text(new Date().toLocaleTimeString('es-ES'));
+        actualizarEstadoMaquinasYTimers(); 
+      }, 1000);
+
+      function stringToDate(horaStr) {
+        const [h, m] = horaStr.split(':');
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        return d;
+      }
+
+      // NAVEGACIÓN
+      $('.selector-card').click(function() {
+        currentPlatform = $(this).data('platform');
+        currentGenre = 'all';
+        $('#mainSelector').fadeOut(200);
+        setTimeout(() => {
+          $('#dashboardContainer').fadeIn(200);
+          renderPlatform(currentPlatform);
+        }, 200);
+      });
+
+      $('#btnVolver').click(function() {
+        $('#dashboardContainer').fadeOut(200);
+        setTimeout(() => { $('#mainSelector').fadeIn(200); }, 200);
+      });
+
+      $('#hamburger').click(function(e) {
+        e.stopPropagation();
+        $('#mobileMenu').toggleClass('active');
+      });
+      $(document).click(function(e) {
+        if (!$(e.target).closest('#mobileMenu, #hamburger').length) {
+          $('#mobileMenu').removeClass('active');
+        }
+      });
+
+      $('.menu-link[data-section="inicio"]').click(function(e) {
+        e.preventDefault();
+        $('#dashboardContainer').fadeOut(200);
+        setTimeout(() => { $('#mainSelector').fadeIn(200); }, 200);
+        $('#mobileMenu').removeClass('active');
+      });
+
+      $('.menu-link[data-section="catalogo"]').click(function(e) {
+        e.preventDefault();
+        currentPlatform = 'catalogo';
+        currentGenre = 'all';
+        $('#mainSelector').fadeOut(200);
+        setTimeout(() => { $('#dashboardContainer').fadeIn(200); renderPlatform('catalogo'); }, 200);
+        $('#mobileMenu').removeClass('active');
+      });
+
+      // RENDERIZADO
+      function renderPlatform(platform) {
+        if(platform === 'catalogo') {
+          $('#section-title').text("Catálogo General de Juegos");
+          $('#platformPromo').hide();
+          $('#searchContainer').show();
+          $('#filterContainer').show();
+          $('.filter-tabs .tab').removeClass('active');
+          $('.filter-tabs .tab[data-genre="all"]').addClass('active');
+          renderCatalogo();
+        } else {
+          const data = db[platform];
+          $('#section-title').text(`Alquiler de ${data.nombre}`);
+          $('#platformPromo').html(data.promo).show();
+          $('#searchContainer').hide();
+          $('#filterContainer').hide();
+          renderMaquinas();
+        }
+      }
+
+      function renderCatalogo() {
+        const allGames = db.catalogo.juegos;
+        let html = '';
+
+        const filtered = allGames.filter(juego => {
+          const matchGenre = currentGenre === 'all' || juego.genero === currentGenre;
+          const matchSearch = juego.nombre.toLowerCase().includes($('#searchGame').val().toLowerCase());
+          return matchGenre && matchSearch;
+        });
+
+        if(filtered.length === 0) {
+          html = `<p style="color:var(--muted); grid-column: 1/-1; text-align:center; padding:20px;">No hay juegos con ese filtro.</p>`;
+        } else {
+          filtered.forEach(juego => {
+            const platTag = juego.plataforma.toUpperCase();
+            html += `
+              <div class="card">
+                <span class="platform-tag">${platTag}</span>
+                <img src="${juego.img}" alt="${juego.nombre}">
+                <div class="card-info">
+                  <h3>${juego.nombre}</h3>
+                  <span class="genre-badge">${juego.genero}</span>
+                </div>
+              </div>
+            `;
+          });
+        }
+        $('#contentGrid').html(html);
+      }
+
+      function renderMaquinas() {
+        const data = db[currentPlatform];
+        let html = '';
+        const ahora = new Date();
+
+        data.maquinas.forEach(maq => {
+          const reservaBloqueante = reservas.find(r => r.maquinaId === maq.id && r.endDate > ahora);
+          const isOcupada = reservaBloqueante ? true : false;
+          let statusText = "Libre";
+          let btnText = "Alquilar";
+
+          if(isOcupada) {
+            if(reservaBloqueante.startDate > ahora) {
+              statusText = "Reservado";
+              btnText = "Reservado";
+            } else {
+              statusText = "En Uso";
+              btnText = "En Uso";
+            }
+          }
+
+          html += `
+            <div class="card">
+              <span class="status-badge ${isOcupada ? 'status-ocupado' : 'status-libre'}">${statusText}</span>
+              <img src="${maq.img}" alt="${maq.nombre}">
+              <div class="card-info">
+                <h3>${maq.nombre}</h3>
+                <p>BOB ${maq.precio} / hora</p>
+                <button class="btn-play btn-alquilar" data-id="${maq.id}" data-nombre="${maq.nombre}" data-precio="${maq.precio}" data-type="${currentPlatform}" ${isOcupada ? 'disabled' : ''}>
+                  ${btnText}
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        $('#contentGrid').html(html);
+      }
+
+      // FILTROS Y BÚSQUEDA
+      $('#filterContainer').on('click', '.tab', function() {
+        $('#filterContainer .tab').removeClass('active');
+        $(this).addClass('active');
+        currentGenre = $(this).data('genre');
+        renderCatalogo();
+      });
+
+      $('#searchGame').on('keyup', function() {
+        if(currentPlatform === 'catalogo') renderCatalogo();
+      });
+
+      // LÓGICA DE RESERVA Y VALIDACIÓN EN TIEMPO REAL (.on)
+      $('#contentGrid').on('click', '.btn-alquilar', function() {
+        maquinaSeleccionada = {
+          id: $(this).data('id'),
+          nombre: $(this).data('nombre'),
+          precio: $(this).data('precio'),
+          type: $(this).data('type')
+        };
+
+        $('#modalTitle').text(`Alquilar: ${maquinaSeleccionada.nombre}`);
+        
+        $('#inputNombre').val('').removeClass('input-error');
+        $('#errorNombre').hide();
+        $('#inputHorasReserva').val('1').removeClass('input-error');
+        $('#errorHoras').hide();
+        $('#selectComboReserva').val('0');
+
+        if(maquinaSeleccionada.type === 'play') {
+          $('#controlesGroup').show();
+          $('#selectControles').val('1');
+        } else {
+          $('#controlesGroup').hide();
+        }
+
+        $('#modalReserva').fadeIn(200);
+      });
+
+      // VALIDACIÓN EN TIEMPO REAL: Nombre (usando .on('input'))
+      $('#inputNombre').on('input blur', function() {
+        const val = $(this).val().trim();
+        const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        
+        if (val !== '' && !soloLetras.test(val)) {
+          $(this).addClass('input-error');
+          $('#errorNombre').text('Solo se permiten letras y espacios.').show();
+        } else {
+          $(this).removeClass('input-error');
+          $('#errorNombre').hide();
+        }
+      });
+
+      // VALIDACIÓN EN TIEMPO REAL: Horas (usando .on('input'))
+      $('#inputHorasReserva').on('input blur', function() {
+        const val = parseInt($(this).val());
+        
+        if (isNaN(val) || val < 1 || val > 5) {
+          $(this).addClass('input-error');
+          $('#errorHoras').text('Debes ingresar entre 1 y 5 horas.').show();
+        } else {
+          $(this).removeClass('input-error');
+          $('#errorHoras').hide();
+        }
+      });
+
+      // CONFIRMAR RESERVA
+      $('#btnConfirmarReserva').click(function() {
+        const nombrePersona = $('#inputNombre').val().trim();
+        const horaInicio = $('#selectHoraInicio').val();
+        const horas = parseInt($('#inputHorasReserva').val());
+        const comboVal = parseInt($('#selectComboReserva').val());
+        const comboText = $("#selectComboReserva option:selected").text();
+        
+        let controles = 1;
+        let extraControles = 0;
+        if(maquinaSeleccionada.type === 'play') {
+          controles = parseInt($('#selectControles').val());
+          extraControles = (controles - 1) * 5;
+        }
+
+        // VALIDACIÓN FINAL
+        const soloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        let hasError = false;
+
+        if(!nombrePersona || !soloLetras.test(nombrePersona)) {
+          $('#inputNombre').addClass('input-error');
+          $('#errorNombre').text('El nombre es obligatorio y solo debe contener letras.').show();
+          hasError = true;
+        }
+
+        if(isNaN(horas) || horas < 1 || horas > 5) {
+          $('#inputHorasReserva').addClass('input-error');
+          $('#errorHoras').text('Las horas deben ser entre 1 y 5.').show();
+          hasError = true;
+        }
+
+        if(hasError) return;
+
+        const startDate = stringToDate(horaInicio);
+        const endDate = new Date(startDate.getTime() + horas * 60 * 60 * 1000);
+        
+        const ahora = new Date();
+        const yaReservada = reservas.find(r => r.maquinaId === maquinaSeleccionada.id && r.endDate > ahora);
+        if(yaReservada) {
+          alert("Lo sentimos, esta máquina acaba de ser reservada.");
+          $('#modalReserva').fadeOut(200);
+          renderMaquinas();
+          return;
+        }
+
+        const nuevaReserva = {
+          id: Date.now(),
+          maquinaId: maquinaSeleccionada.id,
+          maquinaNombre: maquinaSeleccionada.nombre,
+          persona: nombrePersona,
+          horaInicio: horaInicio,
+          startDate: startDate,
+          endDate: endDate,
+          combo: comboVal > 0 ? comboText.split('-')[0].trim() : null,
+          controles: controles,
+          extraControles: extraControles
+        };
+
+        reservas.push(nuevaReserva);
+        
+        $('#modalReserva').fadeOut(200);
+        $('#toastMsg').text(`Reserva para ${nombrePersona} confirmada.`);
+        $('#toastAlert').slideDown(300);
+        setTimeout(() => { $('#toastAlert').fadeOut(300); }, 3000);
+
+        renderMaquinas();
+        renderBitacora();
+      });
+
+      $('#modalClose, #btnCancelarModal').click(function() {
+        $('#modalReserva').fadeOut(200);
+      });
+
+      // BITÁCORA Y ACTUALIZACIÓN EN TIEMPO REAL
+      function renderBitacora() {
+        const $lista = $('#bitacoraLista');
+        $lista.empty();
+
+        if(reservas.length === 0) {
+          $lista.html('<li class="empty">No hay reservas activas</li>');
+          return;
+        }
+
+        reservas.sort((a, b) => a.startDate - b.startDate).forEach(res => {
+          const endStr = res.endDate.getHours().toString().padStart(2, '0') + ':' + res.endDate.getMinutes().toString().padStart(2, '0');
+          
+          let controlesHTML = "";
+          if(res.controles > 1) {
+            controlesHTML = `<br>🎮 ${res.controles} Controles (+BOB ${res.extraControles})`;
+          }
+
+          $lista.append(`
+            <li class="log-item" data-id="${res.id}">
+              <h4>${res.maquinaNombre}</h4>
+              <div class="user">👤 ${res.persona}</div>
+              <div class="details">
+                ⏰ ${res.horaInicio} a ${endStr} (${((res.endDate - res.startDate)/3600000)}h)
+                ${controlesHTML}
+                ${res.combo ? `<br>🍔 ${res.combo}` : ''}
+              </div>
+              <div class="timer-box" id="timer-${res.id}">Calculando...</div>
+            </li>
+          `);
+        });
+        actualizarEstadoMaquinasYTimers();
+      }
+
+      function actualizarEstadoMaquinasYTimers() {
+        const ahora = new Date();
+        let necesitaRenderMaquinas = false;
+
+        reservas.forEach(res => {
+          const $timer = $(`#timer-${res.id}`);
+          
+          if($timer.length > 0) {
+            if(ahora < res.startDate) {
+              const diff = res.startDate - ahora;
+              const mins = Math.floor(diff / 60000);
+              const secs = Math.floor((diff % 60000) / 1000);
+              $timer.removeClass('activo terminado').addClass('espera').html(`⏳ Empieza en: ${mins}m ${secs}s`);
+            } else if(ahora >= res.startDate && ahora < res.endDate) {
+              const diff = res.endDate - ahora;
+              const horas = Math.floor(diff / 3600000);
+              const mins = Math.floor((diff % 3600000) / 60000);
+              const secs = Math.floor((diff % 60000) / 1000);
+              $timer.removeClass('espera terminado').addClass('activo').html(`🟢 En juego: ${horas}h ${mins}m ${secs}s`);
+            } else {
+              $timer.removeClass('espera activo').addClass('terminado').html(`🔴 Finalizada`);
+            }
+          }
+
+          if(ahora >= res.endDate && !res.liberada) {
+            res.liberada = true;
+            necesitaRenderMaquinas = true;
+          }
+        });
+
+        if(necesitaRenderMaquinas && currentPlatform !== 'catalogo') {
+          renderMaquinas();
+        }
+      }
+
+      // Inicializar
+      renderMaquinas();
+    });
+  </script>
 </body>
-  </html>
-  
+</html>
