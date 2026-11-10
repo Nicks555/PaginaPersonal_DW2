@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Nicolás | Portafolio PWA</title>
+  
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ========== VARIABLES Y TEMAS ========== */
+    :root {
+      --bg-base: #f1f5f9;
+      --bg-panel: #ffffff;
+      --bg-card: #f8fafc;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --primary-dark: #0f172a;
+      --accent-orange: #f97316;
+      --accent-light: #fff7ed;
+    }
+
+    body.dark-mode {
+      --bg-base: #0f172a;
+      --bg-panel: #1e293b;
+      --bg-card: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+      --border-color: #475569;
+      --primary-dark: #0b1120;
+      --accent-light: rgba(249, 115, 22, 0.15);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%; height: 100dvh;
+      overflow: hidden; position: fixed;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base); color: var(--text-main);
+      transition: background-color 0.3s ease;
+    }
+
+    button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; outline: none; }
+    h1, h2, h3, h4 { font-weight: 600; }
+
+    /* ========== ESTRUCTURA FLEX ========== */
+    .pwa-app { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; }
+
+    #navbar { height: 55px; background: var(--primary-dark); color: #fff; border-bottom: 3px solid var(--accent-orange); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; flex-shrink: 0; }
+    .nav-left { display: flex; align-items: center; gap: 10px; }
+    .menu-toggle { background: transparent; border: 1px solid #475569; color: #fff; font-size: 1.2rem; padding: 3px 8px; border-radius: 6px; }
+    .logo { font-size: 1rem; font-weight: 700; }
+    .logo span { color: var(--accent-orange); }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    .clock { font-size: 0.75rem; font-weight: 500; color: #cbd5e1; }
+    .theme-toggle-btn { background: transparent; border: 1px solid #475569; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.9rem; }
+
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }
+    .sidebar { position: fixed; top: 0; left: -300px; width: 250px; height: 100%; background: var(--bg-panel); z-index: 200; display: flex; flex-direction: column; transition: left 0.3s ease; box-shadow: 4px 0 15px rgba(0,0,0,0.1); }
+    .sidebar.active { left: 0; }
+    .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; background: var(--bg-card); }
+    .sidebar-header img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-orange); }
+    .sidebar-nav { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    .nav-btn { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 6px; color: var(--text-muted); font-weight: 500; font-size: 0.85rem; background: transparent; text-align: left; width: 100%; }
+    .nav-btn:hover, .nav-btn.active { background: var(--accent-light); color: var(--accent-orange); font-weight: 600; }
+    .sidebar-footer { padding: 10px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;}
+    .btn-facebook { background: #1877F2; color: white; text-decoration: none; padding: 8px; border-radius: 6px; text-align: center; font-weight: 600; font-size: 0.8rem; display: block; }
+
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 8px; }
+    .page-section { display: none; flex-direction: column; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; height: 100%; overflow: hidden; }
+    .panel-header { padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; flex-wrap: wrap; gap: 5px; }
+    .panel-header h2 { font-size: 1rem; }
+
+    .content-area { flex: 1; padding: 10px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ========== COMPONENTES ========== */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(140px, 45%, 250px), 1fr)); gap: 10px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; max-height: 100%; transition: transform 0.2s; }
+    .card:hover { transform: translateY(-2px); border-color: var(--accent-orange); }
+    
+    .card.game-card img { width: 100%; height: clamp(120px, 20vh, 200px); object-fit: cover; object-position: center; border-bottom: 2px solid var(--accent-orange); }
+    .card img { width: 100%; height: clamp(80px, 15vh, 120px); object-fit: cover; border-bottom: 2px solid var(--accent-orange); }
+    
+    .card-body { padding: 8px; flex: 1; display: flex; flex-direction: column; }
+    .card-body h3 { font-size: 0.85rem; margin-bottom: 2px; }
+    .card-body p { font-size: 0.7rem; color: var(--text-muted); line-height: 1.2; }
+    
+    .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 4px; margin-top: 5px; }
+    .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; }
+    th, td { padding: 8px; border-bottom: 1px solid var(--border-color); }
+    th { background: var(--primary-dark); color: #fff; position: sticky; top: 0; z-index: 10; font-size: 0.8rem; }
+    td img { width: 30px; height: 30px; object-fit: cover; border-radius: 4px; vertical-align: middle; margin-right: 5px; }
+
+    .filter-buttons { display: flex; flex-wrap: wrap; gap: 5px; }
+    .btn-filter { background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 500; }
+    .btn-filter.active { background: var(--accent-orange); color: #fff; border-color: var(--accent-orange); }
+    
+    .form-container { max-width: 500px; margin: 0 auto; width: 100%; }
+    .form-group { margin-bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 0.8rem; font-weight: 600; }
+    .form-group input, .form-group textarea { background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px; border-radius: 6px; outline: none; font-family: inherit; font-size: 0.85rem; transition: border 0.2s; }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--accent-orange); }
+    
+    /* Clase de error para validación en tiempo real */
+    .form-group input.error, .form-group textarea.error { border-color: #dc2626; background: rgba(220, 38, 38, 0.05); }
+    .error-msg { color: #dc2626; font-size: 0.7rem; display: none; font-weight: 500; }
+    
+    .btn-submit { padding: 10px; border-radius: 6px; font-weight: 600; background: var(--accent-orange); color: #fff; width: 100%; font-size: 0.85rem; }
+    .success-alert { display: none; background: #f0fdf4; color: #166534; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-weight: 500; font-size: 0.8rem; }
+
+    .hero-carousel { width: 100%; height: clamp(150px, 25vh, 300px); border-radius: 10px; overflow: hidden; position: relative; margin-bottom: 15px; border: 2px solid var(--border-color); }
+    .hero-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0; transition: opacity 1s ease-in-out; display: flex; align-items: flex-end; }
+    .hero-slide.active { opacity: 1; }
+    .hero-slide-text { background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; width: 100%; padding: 15px; font-weight: 600; font-size: 1.1rem; }
+
+    /* Contadores Centrados */
+    .stats-container { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; width: 100%; margin: 0 auto; }
+    .stats-container .card { width: clamp(100px, 30%, 150px); }
+
+    @media (max-width: 768px) {
+      .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .card img, .card.game-card img { height: clamp(70px, 12vh, 100px); }
+      .card-body h3 { font-size: 0.8rem; }
+      .panel-header h2 { font-size: 0.95rem; }
+      .form-container { padding: 0; }
+      .hero-carousel { height: 160px; } /* Mantiene tamaño en móviles */
+    }
+
+    /* Carrusel más grande SOLO en PC */
+    @media (min-width: 1025px) {
+      .hero-carousel { height: 350px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="pwa-app">
+    
+    <header id="navbar">
+      <div class="nav-left">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <div class="logo">Nicolás<span>.</span></div>
+      </div>
+      <div class="nav-right">
+        <div class="clock" id="clockNav">00:00:00</div>
+        <button class="theme-toggle-btn" id="themeBtn">🌙</button>
+      </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop" alt="Avatar">
+        <span>Mi Espacio</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-section="inicio">🏠 Inicio</button>
+        <button class="nav-btn" data-section="pasatiempos">🎨 Pasatiempos</button>
+        <button class="nav-btn" data-section="intereses">💼 Intereses</button>
+        <button class="nav-btn" data-section="horario">📅 Horario</button>
+        <button class="nav-btn" data-section="musica">🎵 Música</button>
+        <button class="nav-btn" data-section="juegos">🎮 Juegos</button>
+        <button class="nav-btn" data-section="contacto">✉️ Contacto</button>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="https://facebook.com" target="_blank" class="btn-facebook">Visitar Facebook</a>
+        <div style="text-align: center; font-size: 0.65rem; color: var(--text-muted);">© 2026 Nicolás PWA</div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      
+      <!-- INICIO -->
+      <div class="page-section active" id="page-inicio" style="display: flex;">
+        <div class="content-area">
+          <h1 style="color: var(--accent-orange); font-size: 1.8rem; margin-bottom: 5px; text-align:center;">NICOLÁS</h1>
+          <p style="color: var(--text-muted); text-align: center; margin-bottom: 15px; font-size: 0.85rem;">
+            Estudiante de la Universidad Privada Domingo Savio (UPDS).
+          </p>
+          
+          <div class="hero-carousel">
+            <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&auto=format&fit=crop');">
+              <div class="hero-slide-text">Gaming & E-Sports</div>
+            </div>
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop');">
+              <div class="hero-slide-text">Desarrollo Web & Tecnología</div>
+            </div>
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&auto=format&fit=crop');">
+              <div class="hero-slide-text">Pasión por los Videojuegos</div>
+            </div>
+          </div>
+
+          <!-- Contadores Centrados -->
+          <div class="stats-container">
+            <div class="card"><div class="card-body" style="text-align:center; padding: 10px;"><h3 style="font-size:1.5rem; color:var(--accent-orange);">6</h3><p style="font-size:0.75rem;">Pasatiempos</p></div></div>
+            <div class="card"><div class="card-body" style="text-align:center; padding: 10px;"><h3 style="font-size:1.5rem; color:var(--accent-orange);">5</h3><p style="font-size:0.75rem;">Intereses</p></div></div>
+            <div class="card"><div class="card-body" style="text-align:center; padding: 10px;"><h3 style="font-size:1.5rem; color:var(--accent-orange);">6</h3><p style="font-size:0.75rem;">Canciones</p></div></div>
+            <div class="card"><div class="card-body" style="text-align:center; padding: 10px;"><h3 style="font-size:1.5rem; color:var(--accent-orange);">6</h3><p style="font-size:0.75rem;">Juegos</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASATIEMPOS -->
+      <div class="page-section" id="page-pasatiempos">
+        <div class="panel-header"><h2>Mis Pasatiempos</h2></div>
+        <div class="content-area">
+          <div class="cards-grid">
+            <div class="card"><img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&auto=format&fit=crop"><div class="card-body"><h3>Ver Paisajes</h3></div></div>
+            <div class="card"><img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&auto=format&fit=crop"><div class="card-body"><h3>Escribir Historias</h3></div></div>
+            <div class="card"><img src="https://images.unsplash.com/photo-1501555088652-021faa106b9b?w=400&auto=format&fit=crop"><div class="card-body"><h3>Caminatas</h3></div></div>
+            <div class="card"><img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&auto=format&fit=crop"><div class="card-body"><h3>Ver Videos</h3></div></div>
+            <div class="card"><img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&auto=format&fit=crop"><div class="card-body"><h3>Escuchar Música</h3></div></div>
+            <div class="card"><img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&auto=format&fit=crop"><div class="card-body"><h3>Videojuegos</h3></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERESES -->
+      <div class="page-section" id="page-intereses">
+        <div class="panel-header"><h2>Intereses Productivos</h2></div>
+        <div class="content-area">
+          <div class="cards-grid">
+            <div class="card"><img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&auto=format&fit=crop"><div class="card-body"><h3>Programación</h3></div></div>
+            <div class="card"><img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400&auto=format&fit=crop"><div class="card-body"><h3>Editar Videos</h3></div></div>
+            <div class="card"><img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=400&auto=format&fit=crop"><div class="card-body"><h3>Cocinar</h3></div></div>
+            <div class="card"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&auto=format&fit=crop"><div class="card-body"><h3>Trabajo de Ventas</h3></div></div>
+            <div class="card"><img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&auto=format&fit=crop"><div class="card-body"><h3>Limpieza del Hogar</h3></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HORARIO -->
+      <div class="page-section" id="page-horario">
+        <div class="panel-header"><h2>Horario Semanal</h2></div>
+        <div class="content-area">
+          <table>
+            <thead><tr><th>Día</th><th>Mañana</th><th>Tarde</th><th>Noche</th></tr></thead>
+            <tbody>
+              <tr><td><img src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=100">Lunes</td><td>Clases</td><td>Estudio</td><td>Gym</td></tr>
+              <tr><td><img src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=100">Martes</td><td>Trabajo</td><td>Proyectos</td><td>Lectura</td></tr>
+              <tr><td><img src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=100">Miércoles</td><td>Clases</td><td>Estudio</td><td>Música</td></tr>
+              <tr><td><img src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=100">Jueves</td><td>Trabajo</td><td>Proyectos</td><td>Gym</td></tr>
+              <tr><td><img src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=100">Viernes</td><td>Clases</td><td>Descanso</td><td>Salir</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MÚSICA -->
+      <div class="page-section" id="page-musica">
+        <div class="panel-header">
+          <h2>Música Favorita</h2>
+          <div class="filter-buttons">
+            <button class="btn-filter active" data-filter-genre="todos">Todos</button>
+            <button class="btn-filter" data-filter-genre="romantica">Romántica</button>
+            <button class="btn-filter" data-filter-genre="rock">Bandas / Rock</button>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="filter-buttons" id="artistas-filtros" style="display:none; margin-bottom: 10px;">
+            <button class="btn-filter" data-filter-artist="todos">Todos los artistas</button>
+            <button class="btn-filter" data-filter-artist="chayanne">Chayanne</button>
+            <button class="btn-filter" data-filter-artist="arjona">Arjona</button>
+            <button class="btn-filter" data-filter-artist="imagine">Imagine Dragons</button>
+            <button class="btn-filter" data-filter-artist="linkin">Linkin Park</button>
+            <button class="btn-filter" data-filter-artist="queen">Queen</button>
+          </div>
+          <div class="cards-grid" id="lista-musica">
+            <div class="card music-card" data-genre="romantica" data-artist="chayanne">
+              <div class="card-body"><h3>Me Enamoré de Ti</h3><p>Chayanne</p><div class="video-container"><iframe src="https://www.youtube.com/embed/5n6f2L9Q-K8" allowfullscreen></iframe></div></div>
+            </div>
+            <div class="card music-card" data-genre="romantica" data-artist="arjona">
+              <div class="card-body"><h3>Señora de las 4 Décadas</h3><p>Arjona</p><div class="video-container"><iframe src="https://www.youtube.com/embed/3n6pX8jWq3E" allowfullscreen></iframe></div></div>
+            </div>
+            <div class="card music-card" data-genre="rock" data-artist="imagine">
+              <div class="card-body"><h3>Believer</h3><p>Imagine Dragons</p><div class="video-container"><iframe src="https://www.youtube.com/embed/7wtfhZwyrcc" allowfullscreen></iframe></div></div>
+            </div>
+            <div class="card music-card" data-genre="rock" data-artist="imagine">
+              <div class="card-body"><h3>Thunder</h3><p>Imagine Dragons</p><div class="video-container"><iframe src="https://www.youtube.com/embed/fKopy74weus" allowfullscreen></iframe></div></div>
+            </div>
+            <div class="card music-card" data-genre="rock" data-artist="linkin">
+              <div class="card-body"><h3>In The End</h3><p>Linkin Park</p><div class="video-container"><iframe src="https://www.youtube.com/embed/eVTXPUF4Oz4" allowfullscreen></iframe></div></div>
+            </div>
+            <div class="card music-card" data-genre="rock" data-artist="linkin">
+              <div class="card-body"><h3>Numb</h3><p>Linkin Park</p><div class="video-container"><iframe src="https://www.youtube.com/embed/kXYiU_JCYtU" allowfullscreen></iframe></div></div>
+            </div>
+            <div class="card music-card" data-genre="rock" data-artist="queen">
+              <div class="card-body"><h3>Bohemian Rhapsody</h3><p>Queen</p><div class="video-container"><iframe src="https://www.youtube.com/embed/fJ9rUzIMcZQ" allowfullscreen></iframe></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- JUEGOS -->
+      <div class="page-section" id="page-juegos">
+        <div class="panel-header">
+          <h2>Mis Juegos Favoritos</h2>
+          <div class="filter-buttons">
+            <button class="btn-filter active" data-filter-game="todos">Todos</button>
+            <button class="btn-filter" data-filter-game="shooter">Shooter</button>
+            <button class="btn-filter" data-filter-game="terror">Terror</button>
+            <button class="btn-filter" data-filter-game="fantasia">Fantasía</button>
+            <button class="btn-filter" data-filter-game="movil">Móvil</button>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="cards-grid" id="lista-juegos">
+            
+            <!-- CS2 -->
+            <div class="card game-card" data-game="shooter">
+              <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg" alt="CS2">
+              <div class="card-body"><h3>Counter-Strike 2</h3><p>Terroristas vs Antiterroristas. Un shooter táctico 5v5 donde la estrategia y la puntería definen la victoria.</p></div>
+            </div>
+            
+            <!-- Left 4 Dead 2 -->
+            <div class="card game-card" data-game="terror">
+              <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/550/header.jpg" alt="L4D2">
+              <div class="card-body"><h3>Left 4 Dead 2</h3><p>Supervivencia zombi. Tú y 3 amigos deben escapar de hordas de infectados en un mundo post-apocalíptico.</p></div>
+            </div>
+            
+            <!-- The Witcher 3 -->
+            <div class="card game-card" data-game="fantasia">
+              <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/292030/header.jpg" alt="Witcher 3">
+              <div class="card-body"><h3>The Witcher 3</h3><p>RPG de mundo abierto. Eres Geralt de Rivia, un cazador de monstruos en busca de su hija adoptiva, Ciri.</p></div>
+            </div>
+            
+            <!-- Geometry Dash -->
+            <div class="card game-card" data-game="movil">
+              <img src="https://upload.wikimedia.org/wikipedia/en/3/3c/Geometry_Dash_cover.png" alt="Geometry Dash">
+              <div class="card-body"><h3>Geometry Dash</h3><p>Plataformas rítmico. Salta y esquiva obstáculos al ritmo de la música electrónica en niveles muy difíciles.</p></div>
+            </div>
+            
+            <!-- Dragon Ball Legends -->
+            <div class="card game-card" data-game="movil">
+              <img src="https://upload.wikimedia.org/wikipedia/en/9/9d/Dragon_Ball_Legends_icon.png" alt="Dragon Ball Legends">
+              <div class="card-body"><h3>Dragon Ball Legends</h3><p>Juego de lucha 3D para móviles. Reúne a tus guerreros favoritos y participa en batallas PvP en tiempo real.</p></div>
+            </div>
+            
+            <!-- Valorant -->
+            <div class="card game-card" data-game="shooter">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Valorant_cover.jpg/800px-Valorant_cover.jpg" alt="Valorant">
+              <div class="card-body"><h3>Valorant</h3><p>Shooter táctico 5v5 con personajes que tienen habilidades únicas. Combina puntería con estrategia en equipo.</p></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTACTO -->
+      <div class="page-section" id="page-contacto">
+        <div class="panel-header"><h2>Formulario de Contacto</h2></div>
+        <div class="content-area">
+          <div class="form-container">
+            <div class="success-alert" id="contactoSuccess">¡Mensaje enviado con éxito! Me pondré en contacto pronto.</div>
+            <form id="formContacto" novalidate>
+              <div class="form-group">
+                <label>Nombre Completo *</label>
+                <!-- Se agregó onkeypress para bloquear números en tiempo real -->
+                <input type="text" id="contactName" placeholder="Ej. Juan Pérez" onkeypress="return (event.charCode > 64 && event.charCode < 91) || (event.charCode > 96 && event.charCode < 123) || event.charCode == 32 || event.charCode == 13 || event.charCode == 8 || event.charCode == 225 || event.charCode == 233 || event.charCode == 237 || event.charCode == 243 || event.charCode == 250 || event.charCode == 193 || event.charCode == 201 || event.charCode == 205 || event.charCode == 211 || event.charCode == 218 || event.charCode == 241 || event.charCode == 209">
+                <span class="error-msg" id="err-contactName">Solo se permiten letras y espacios.</span>
+              </div>
+              <div class="form-group">
+                <label>Correo Electrónico *</label>
+                <input type="email" id="contactEmail" placeholder="correo@ejemplo.com">
+                <span class="error-msg" id="err-contactEmail">Ingrese un correo válido (ejemplo@dominio.com).</span>
+              </div>
+              <div class="form-group">
+                <label>Mensaje *</label>
+                <textarea id="contactMsg" rows="3" placeholder="Escribe tu mensaje aquí..."></textarea>
+                <span class="error-msg" id="err-contactMsg">El mensaje no puede estar vacío (mín. 5 caracteres).</span>
+              </div>
+              <button type="submit" class="btn-submit">✅ Enviar Mensaje</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      
+      // --- CARRUSEL AUTOMÁTICO ---
+      let currentSlide = 0;
+      const slides = $('.hero-slide');
+      setInterval(function() {
+        slides.removeClass('active');
+        currentSlide = (currentSlide + 1) % slides.length;
+        slides.eq(currentSlide).addClass('active');
+      }, 3000);
+
+      // --- MENÚ HAMBURGUESA ---
+      function toggleMenu() {
+        $('#sidebar').toggleClass('active');
+        if ($('#sidebar').hasClass('active')) { $('#sidebarOverlay').fadeIn(200); } 
+        else { $('#sidebarOverlay').fadeOut(200); }
+      }
+      $('#menuToggle').on('click', toggleMenu);
+      $('#sidebarOverlay').on('click', toggleMenu);
+
+      // --- MODO CLARO / OSCURO ---
+      $('#themeBtn').on('click', function() {
+        $('body').toggleClass('dark-mode');
+        $(this).html($('body').hasClass('dark-mode') ? '☀️' : '🌙');
+      });
+
+      // --- RELOJ ---
+      function actualizarReloj() {
+        const ahora = new Date();
+        $('#clockNav').text(ahora.toLocaleTimeString('es-ES'));
+      }
+      setInterval(actualizarReloj, 1000);
+      actualizarReloj();
+
+      // --- NAVEGACIÓN ---
+      $('.nav-btn').on('click', function() {
+        $('.nav-btn').removeClass('active');
+        $(this).addClass('active');
+        const section = $(this).data('section');
+        $('.page-section').hide(); 
+        $('#page-' + section).css('display', 'flex').hide().fadeIn(200); 
+        if ($('#sidebar').hasClass('active')) { toggleMenu(); }
+      });
+
+      // --- FILTROS MÚSICA ---
+      $('.btn-filter[data-filter-genre]').on('click', function() {
+        $('.btn-filter[data-filter-genre]').removeClass('active');
+        $(this).addClass('active');
+        const genre = $(this).data('filter-genre');
+        
+        if (genre === 'todos') {
+          $('#artistas-filtros').slideUp();
+        } else {
+          $('#artistas-filtros').slideDown();
+          $('.btn-filter[data-filter-artist]').hide();
+          $('.btn-filter[data-filter-artist="todos"]').show();
+          
+          if (genre === 'romantica') {
+            $('.btn-filter[data-filter-artist="chayanne"]').show();
+            $('.btn-filter[data-filter-artist="arjona"]').show();
+          } else if (genre === 'rock') {
+            $('.btn-filter[data-filter-artist="imagine"]').show();
+            $('.btn-filter[data-filter-artist="linkin"]').show();
+            $('.btn-filter[data-filter-artist="queen"]').show();
+          }
+        }
+        
+        $('.btn-filter[data-filter-artist]').removeClass('active');
+        $('.btn-filter[data-filter-artist="todos"]').addClass('active').show();
+        
+        filtrarMusica(genre, 'todos');
+      });
+
+      $('.btn-filter[data-filter-artist]').on('click', function() {
+        $('.btn-filter[data-filter-artist]').removeClass('active');
+        $(this).addClass('active');
+        const artist = $(this).data('filter-artist');
+        const genre = $('.btn-filter[data-filter-genre].active').data('filter-genre');
+        filtrarMusica(genre, artist);
+      });
+
+      function filtrarMusica(genre, artist) {
+        $('.music-card').each(function() {
+          const cardGenre = $(this).data('genre');
+          const cardArtist = $(this).data('artist');
+          const matchGenre = (genre === 'todos' || cardGenre === genre);
+          const matchArtist = (artist === 'todos' || cardArtist === artist);
+          if (matchGenre && matchArtist) { $(this).fadeIn(200); } 
+          else { $(this).fadeOut(200); }
+        });
+      }
+
+      // --- FILTROS JUEGOS ---
+      $('.btn-filter[data-filter-game]').on('click', function() {
+        $('.btn-filter[data-filter-game]').removeClass('active');
+        $(this).addClass('active');
+        const filter = $(this).data('filter-game');
+        $('#lista-juegos .game-card').each(function() {
+          if (filter === 'todos' || $(this).data('game') === filter) { $(this).fadeIn(200); } 
+          else { $(this).fadeOut(200); }
+        });
+      });
+
+      // --- VALIDACIÓN EN TIEMPO REAL (INPUT) ---
+      $('#contactName').on('input', function() {
+        const val = $(this).val().trim();
+        // Regex para solo letras y espacios
+        const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/;
+        
+        if (!regex.test(val)) {
+          $(this).addClass('error');
+          $('#err-contactName').show();
+        } else {
+          $(this).removeClass('error');
+          $('#err-contactName').hide();
+        }
+      });
+
+      $('#contactEmail').on('input', function() {
+        const val = $(this).val().trim();
+        const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        // No mostramos error si está vacío (para no molestar mientras escribe)
+        if (val !== '' && !regex.test(val)) {
+          $(this).addClass('error');
+          $('#err-contactEmail').show();
+        } else {
+          $(this).removeClass('error');
+          $('#err-contactEmail').hide();
+        }
+      });
+
+      $('#contactMsg').on('input', function() {
+        const val = $(this).val().trim();
+        if (val.length > 0 && val.length < 5) {
+          $(this).addClass('error');
+          $('#err-contactMsg').show();
+        } else {
+          $(this).removeClass('error');
+          $('#err-contactMsg').hide();
+        }
+      });
+
+      // --- SUBMIT DEL FORMULARIO ---
+      $('#formContacto').on('submit', function(e) {
+        e.preventDefault();
+        let valido = true;
+        const nombre = $('#contactName').val().trim();
+        const email = $('#contactEmail').val().trim();
+        const mensaje = $('#contactMsg').val().trim();
+
+        // Validar nombre
+        if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre) || nombre === '') { 
+          $('#contactName').addClass('error'); $('#err-contactName').show(); valido = false; 
+        }
+        
+        // Validar email
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) { 
+          $('#contactEmail').addClass('error'); $('#err-contactEmail').show(); valido = false; 
+        }
+        
+        // Validar mensaje
+        if (mensaje.length < 5) { 
+          $('#contactMsg').addClass('error'); $('#err-contactMsg').show(); valido = false; 
+        }
+
+        if (valido) {
+          $('#contactoSuccess').fadeIn().delay(3000).fadeOut();
+          this.reset();
+          // Limpiar clases de error
+          $('input, textarea').removeClass('error');
+          $('.error-msg').hide();
+        }
+      });
+
+    });
+  </script>
+</body>
+</html>
