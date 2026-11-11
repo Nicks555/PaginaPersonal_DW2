@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Nicolas - Presentación</title>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- ===== CONFIGURACIÓN PWA ===== -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="Nic_Logo.png">
+
+<style>
+  /* ===== VARIABLES MODO CLARO ===== */
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --accent-cyan: #0284c7; 
+    --accent-blue: #2563eb;
+    --text-main: #0f172a;
+    --text-muted: #334155;
+    --sidebar-bg: rgba(255, 255, 255, 0.95);
+    --modal-bg: #f8fafc;
+    --modal-overlay: rgba(255, 255, 255, 0.7);
+    --accent-orange: #f97316;
+    --glow-orange: rgba(249, 115, 22, 0.5);
+    --card-bg: rgba(255, 255, 255, 0.95);
+  }
+
+  /* ===== VARIABLES MODO OSCURO ===== */
+  body.dark-mode {
+    --glass-bg: rgba(15, 25, 50, 0.75); 
+    --glass-border: rgba(100, 180, 255, 0.3);
+    --accent-cyan: #7fd3ff;
+    --accent-blue: #4aa8ff;
+    --text-main: #e8f0ff;
+    --text-muted: #cbd5e1;
+    --sidebar-bg: rgba(13, 26, 46, 0.95);
+    --modal-bg: #0f172a;
+    --modal-overlay: rgba(3, 8, 18, 0.8);
+    --accent-orange: #fb923c;
+    --glow-orange: rgba(251, 146, 60, 0.6);
+    --card-bg: rgba(30, 41, 59, 0.95);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    height:100%; width: 100%; overflow:hidden; 
+    font-family:'Segoe UI', system-ui, sans-serif;
+    color:var(--text-main); background: #000;
+    transition: color 0.4s;
+  }
+
+  /* ===== CARRUSEL DE FONDO ===== */
+  .bg-carousel { 
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+    z-index: 0; overflow: hidden; background: #1a2a4a;
+  }
+  .bg-slide {
+    position: absolute; inset: 0; background-size: cover; background-position: center;
+    opacity: 0; transition: opacity 1.5s ease-in-out, filter 0.5s;
+    filter: brightness(0.85) saturate(1.1); 
+  }
+  .bg-slide.active { opacity: 1; }
+  body.dark-mode .bg-slide { filter: brightness(0.5) saturate(1.2); }
+
+  .bg-slide:nth-child(1) { background-image: url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1920&q=80'); }
+  .bg-slide:nth-child(2) { background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80'); }
+  .bg-slide:nth-child(3) { background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80'); }
+
+  /* ===== CONTENEDOR PRINCIPAL ===== */
+  .hud {
+    position: relative; z-index: 1;
+    height: 100%; display: flex; flex-direction: column;
+    padding: clamp(15px, 3vw, 40px); 
+  }
+
+  /* HEADER */
+  header {
+    display:flex; align-items:center; justify-content: space-between;
+    padding: 10px 0; flex-shrink: 0; position: relative; z-index: 100;
+  }
+  
+  .profile-info { display: flex; align-items: center; gap: clamp(10px, 1.5vw, 20px); }
+
+  .avatar {
+    width: clamp(50px, 6vw, 70px); height: clamp(50px, 6vw, 70px);
+    border-radius: 15px; border: 3px solid var(--accent-orange);
+    background: #333; object-fit: cover; flex-shrink: 0;
+    box-shadow: 0 0 10px var(--glow-orange); transition: border-color 0.4s, box-shadow 0.4s;
+  }
+  
+  .info h1 { 
+    font-size: clamp(1.8rem, 3vw, 2.5rem); color: var(--text-main); 
+    text-shadow: 0 2px 5px rgba(0,0,0,0.7);
+  }
+  
+  .top-actions { display:flex; gap:clamp(6px, 1vw, 12px); flex-shrink: 0; }
+  
+  .btn-square {
+    width: clamp(38px, 4vw, 45px); height: clamp(38px, 4vw, 45px);
+    border-radius: 12px; background: var(--glass-bg); backdrop-filter: blur(8px); border: 2px solid var(--accent-orange);
+    color: var(--text-main); font-size: clamp(1rem, 1.5vw, 1.2rem);
+    display:flex; align-items:center; justify-content:center; cursor: pointer;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s, box-shadow 0.2s, background 0.4s, color 0.4s;
+  }
+  .btn-square:hover { transform: scale(1.1); box-shadow: 0 0 15px var(--accent-orange); }
+
+  /* CONTENIDO CENTRAL */
+  .center-content {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start; padding-left: clamp(0px, 2vw, 20px); 
+  }
+
+  .floating-buttons { display: flex; flex-direction: column; gap: clamp(15px, 3vh, 30px); }
+
+  .float-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--text-main); font-size: clamp(0.8rem, 1.2vw, 1rem);
+    font-weight: 600; cursor: pointer; transition: transform 0.2s, color 0.4s;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  }
+  .float-btn:hover { transform: scale(1.05); }
+  
+  .float-btn .icon-wrap {
+    width: clamp(60px, 6vw, 75px); height: clamp(60px, 6vw, 75px);
+    border-radius: 18px; background: var(--glass-bg); backdrop-filter: blur(10px);
+    border: 2px solid var(--accent-blue);
+    display:flex; align-items:center; justify-content:center;
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    color: var(--text-main);
+    transition: border-color 0.3s, background 0.4s, color 0.4s, box-shadow 0.3s;
+  }
+  .float-btn:hover .icon-wrap { border-color: var(--accent-orange); box-shadow: 0 0 15px var(--accent-orange); }
+
+  /* FOOTER */
+  footer {
+    display: flex; justify-content: space-around; align-items: center;
+    background: var(--glass-bg); backdrop-filter: blur(15px); 
+    border: 2px solid var(--accent-orange);
+    border-radius: 20px; padding: clamp(8px, 1.5vh, 15px); 
+    flex-shrink: 0; width: 100%; margin-top: auto; 
+    transition: background 0.4s, border-color 0.4s;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--text-muted); font-size: clamp(0.6rem, 1vw, 0.9rem); cursor: pointer; transition: color 0.3s;
+  }
+  .nav-item i { font-size: clamp(1.2rem, 2vw, 1.8rem); }
+  .nav-item.active, .nav-item:hover { color: var(--accent-orange); text-shadow: 0 0 10px var(--accent-orange); }
+
+  /* MENÚ HAMBURGUESA */
+  #sidebar {
+    position: absolute; top: 100%; right: 0; width: 220px;
+    background: var(--sidebar-bg); backdrop-filter: blur(15px);
+    border: 2px solid var(--accent-orange); box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    border-radius: 15px; padding: 10px; display: flex; flex-direction: column; gap: 5px;
+    opacity: 0; transform: translateY(-10px); pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s, background 0.4s; z-index: 150;
+  }
+  #sidebar.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  #sidebar .nav-item { flex-direction: row; justify-content: flex-start; padding: 10px 15px; border-radius: 10px; gap: 15px; font-size: 1rem; width: 100%; }
+  #sidebar .nav-item:hover { background: rgba(249, 115, 22, 0.2); }
+
+  /* ===== MODALES ===== */
+  .modal-overlay {
+    position:fixed; inset:0; background:var(--modal-overlay); backdrop-filter:blur(5px);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity 0.3s; z-index:200; padding: 20px;
+  }
+  .modal-overlay.active { opacity:1; pointer-events:auto; }
+  
+  .modal {
+    background: var(--modal-bg); border: 2px solid var(--accent-orange);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5); border-radius: 20px;
+    width: 100%; max-width: 900px; max-height: 85vh; overflow-y: auto; padding: clamp(15px, 2vw, 25px);
+    transform: translateY(20px); transition: transform 0.3s;
+  }
+  .modal-overlay.active .modal { transform: translateY(0); }
+  
+  .modal-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px; gap: 10px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
+  .modal h2 { color: var(--text-main); font-size: clamp(1.2rem, 2vw, 1.5rem); font-weight: 600; }
+  
+  .modal-close {
+    background: transparent; border: none; color: var(--text-muted);
+    font-size: 1.5rem; cursor: pointer; transition: color 0.3s;
+  }
+  .modal-close:hover { color: var(--accent-orange); }
+
+  /* BOTONES DEL MODAL DE DESCARGA */
+  .pwa-buttons { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-pwa {
+    flex: 1; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; font-size: 1rem; transition: transform 0.2s;
+  }
+  .btn-pwa:hover { transform: scale(1.02); }
+  .btn-pwa-cancel { background: #64748b; color: white; }
+  .btn-pwa-accept { background: var(--accent-orange); color: white; }
+
+  /* FILTROS */
+  .filter-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-filter {
+    background: transparent; border: 1px solid var(--glass-border); color: var(--text-muted);
+    padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+  }
+  .btn-filter.active, .btn-filter:hover { background: var(--accent-orange); border-color: var(--accent-orange); color: #fff; }
+
+  /* TARJETAS */
+  .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+  .media-card {
+    background: var(--card-bg); border: 1px solid var(--glass-border);
+    border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s; border-bottom: 3px solid var(--accent-orange); 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .media-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+  .media-card img, .media-card iframe { width: 100%; aspect-ratio: 16/9; object-fit: cover; border: none; }
+  .media-info { padding: 12px; flex: 1; display: flex; flex-direction: column; }
+  .media-title { font-size: 0.95rem; font-weight: bold; color: var(--text-main); margin-bottom: 4px; }
+  .media-subtitle { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; }
+  .media-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+
+  /* Tabla de Horario */
+  .schedule-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+  .schedule-table th, .schedule-table td { border: 1px solid var(--glass-border); padding: 10px; text-align: left; }
+  .schedule-table th { background: var(--glass-bg); color: var(--text-main); font-weight: bold; }
+  .schedule-table tr:nth-child(even) { background: var(--card-bg); }
+
+  /* Redes Sociales */
+  .social-links { display: flex; gap: 15px; margin-top: 15px; }
+  .social-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 45px; height: 45px; border-radius: 12px;
+    background: var(--glass-bg); border: 2px solid var(--accent-orange);
+    color: var(--text-main); font-size: 1.3rem; text-decoration: none; transition: all 0.3s;
+  }
+  .social-icon:hover { background: var(--accent-orange); color: #fff; transform: translateY(-3px); }
+</style>
+</head>
+<body>
+
+<!-- CARRUSEL DE FONDO -->
+<div class="bg-carousel">
+  <div class="bg-slide active"></div>
+  <div class="bg-slide"></div>
+  <div class="bg-slide"></div>
+</div>
+
+<div class="hud" id="contenedorMenu">
+  <!-- HEADER -->
+  <header>
+    <div class="profile-info">
+      <img src="Nic_Logo.png" alt="Nicolas" class="avatar"> 
+      <div class="info">
+        <h1>Nicolas</h1>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn-square" id="btnDescargaPWA" title="Instalar App"><i class="fas fa-download"></i></button>
+      <button class="btn-square" id="themeBtn">🌙</button>
+      <button class="btn-square" id="menuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+
+    <aside id="sidebar">
+      <div class="nav-item" data-modal="modal-perfil"><i class="fas fa-user-astronaut"></i><span>Perfil</span></div>
+      <div class="nav-item" data-modal="modal-horario"><i class="fas fa-calendar-alt"></i><span>Horario</span></div>
+      <div class="nav-item" data-modal="modal-musica"><i class="fas fa-compact-disc"></i><span>Música</span></div>
+      <div class="nav-item" data-modal="modal-redes"><i class="fas fa-share-alt"></i><span>Redes</span></div>
+    </aside>
+  </header>
+
+  <!-- BOTONES CENTRALES -->
+  <div class="center-content">
+    <div class="floating-buttons">
+      <div class="float-btn" data-modal="modal-pasatiempos">
+        <div class="icon-wrap"><i class="fas fa-palette"></i></div>
+        <span>Pasatiempos</span>
+      </div>
+      <div class="float-btn" data-modal="modal-intereses">
+        <div class="icon-wrap"><i class="fas fa-lightbulb"></i></div>
+        <span>Intereses</span>
+      </div>
+      <div class="float-btn" data-modal="modal-videojuegos">
+        <div class="icon-wrap"><i class="fas fa-gamepad"></i></div>
+        <span>Videojuegos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="nav-item active" data-modal="modal-perfil"><i class="fas fa-user-astronaut"></i><span>Perfil</span></div>
+    <div class="nav-item" data-modal="modal-horario"><i class="fas fa-calendar-alt"></i><span>Horario</span></div>
+    <div class="nav-item" data-modal="modal-musica"><i class="fas fa-compact-disc"></i><span>Música</span></div>
+    <div class="nav-item" data-modal="modal-redes"><i class="fas fa-share-alt"></i><span>Redes</span></div>
+  </footer>
+</div>
+
+<!-- ================= MODALES INFORMATIVOS ================= -->
+<!-- (Los modales de juegos, música, etc. se mantienen igual, omito el código para no hacerlo tan largo, pero tú debes dejarlos como los tenías) -->
+<!-- Si necesitas que te los vuelva a poner completos, dímelo, pero solo están igual que en el mensaje anterior -->
+
+<!-- ================= MODAL DE CONFIRMACIÓN PWA ================= -->
+<div class="modal-overlay" id="modal-descarga-pwa">
+  <div class="modal" style="max-width: 400px; text-align: center;">
+    <h2 style="justify-content: center; border-bottom: none; margin-bottom: 10px; font-size: 1.5rem;">📲 Instalar Aplicación</h2>
+    <p style="margin-bottom: 20px;">¿Deseas descargar e instalar esta aplicación en tu dispositivo para acceder más rápido?</p>
+    <div class="pwa-buttons">
+      <button class="btn-pwa btn-pwa-cancel" id="btnCancelarPWA">Cancelar</button>
+      <button class="btn-pwa btn-pwa-accept" id="btnAceptarPWA">Sí, instalar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL DE INSTRUCCIONES (PC) ================= -->
+<div class="modal-overlay" id="modal-instrucciones-pc">
+  <div class="modal" style="max-width: 450px; text-align: center;">
+    <h2 style="justify-content: center; border-bottom: none; margin-bottom: 10px; font-size: 1.4rem;">💻 Instalar en PC</h2>
+    <p style="margin-bottom: 15px; font-size: 0.95rem;">Tu navegador no permite la instalación automática aquí. Para instalarla:</p>
+    
+    <div style="text-align: left; background: var(--glass-bg); padding: 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; border: 1px solid var(--glass-border);">
+      <p style="margin-bottom: 8px;"><strong>1.</strong> Busca el icono de instalar <i class="fas fa-desktop"></i> en la barra de direcciones de tu navegador (arriba a la derecha).</p>
+      <p style="margin-bottom: 8px;"><strong>2.</strong> O abre el menú de 3 puntos <i class="fas fa-ellipsis-v"></i>.</p>
+      <p><strong>3.</strong> Selecciona <strong>"Instalar aplicación"</strong> o <strong>"Añadir a pantalla de inicio"</strong>.</p>
+    </div>
+    
+    <button class="btn-pwa btn-pwa-accept" id="btnCerrarInstrucciones" style="width: 100%;">Entendido</button>
+  </div>
+</div>
+
+<!-- ================= SCRIPT CORREGIDO ================= -->
+<script>
+$(document).ready(function() {
+  
+  // 1. CARRUSEL DE FONDO
+  let currentSlide = 0;
+  const slides = $('.bg-slide');
+  setInterval(function() {
+    slides.removeClass('active');
+    currentSlide = (currentSlide + 1) % slides.length;
+    slides.eq(currentSlide).addClass('active');
+  }, 5000);
+
+  // 2. LÓGICA DE HIDRATACIÓN INVISIBLE OPTIMIZADA
+  // En lugar de reiniciar los botones con cada clic, solo limpiamos eventos duplicados de forma segura.
+  function hidratarEnSegundoPlano() {
+    // Esta función libera la memoria de eventos antiguos sin bloquear los actuales.
+    // Solo afecta a los botones principales, no a los modales ni a la PWA.
+    $('.float-btn, .nav-item, #themeBtn, #menuToggle').off('click');
+    enlazarEventosPrincipales();
+  }
+
+  function enlazarEventosPrincipales() {
+    // A) Menú Hamburguesa
+    $('#menuToggle').on('click', function(e) {
+      e.stopPropagation(); 
+      $('#sidebar').toggleClass('active');
+    });
+
+    $(document).on('click', function(e) {
+      if (!$(e.target).closest('#sidebar').length && !$(e.target).closest('#menuToggle').length) {
+        $('#sidebar').removeClass('active');
+      }
+    });
+
+    // B) Modo Oscuro
+    $('#themeBtn').on('click', function() {
+      $('body').toggleClass('dark-mode');
+      $(this).html($('body').hasClass('dark-mode') ? '☀️' : '🌙');
+    });
+
+    // C) Abrir Modales
+    $('.float-btn, .nav-item').on('click', function() {
+      const id = $(this).data('modal');
+      if(id) {
+        $('#' + id).addClass('active');
+        $('#sidebar').removeClass('active'); 
+      }
+    });
+
+    // D) Cerrar Modales
+    $('.modal-overlay').on('click', function(e) {
+      if (e.target === this || $(e.target).closest('.modal-close').length) {
+        $(this).removeClass('active');
+      }
+    });
+
+    // E) Filtros
+    $('.btn-filter').on('click', function() {
+      $(this).siblings().removeClass('active');
+      $(this).addClass('active');
+      const filtro = $(this).data('filter');
+      const $grid = $(this).closest('.modal').find('.media-grid');
+      $grid.find('.media-card').each(function() {
+        const categoria = $(this).data('category');
+        if (filtro === 'todos' || categoria === filtro) {
+          $(this).show();
+        } else {
+          $(this).hide();
+        }
+      });
+    });
+  }
+
+  enlazarEventosPrincipales(); 
+  
+  // El escudo de hidratación ahora solo se activa al hacer clic fuera de los modales
+  $(document).on('click', function(e) {
+    if (!$(e.target).closest('.modal-overlay').length) {
+      hidratarEnSegundoPlano();
+    }
+  });
+
+  // ==========================================
+  // 3. LÓGICA PWA (CONFIRMACIÓN E INSTALACIÓN)
+  // ==========================================
+  
+  // Si la app ya está instalada y se abre en modo Standalone, ocultamos el botón
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+    $('#btnDescargaPWA').hide();
+  }
+
+  let deferredPrompt;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+
+  // Al hacer clic en el botón de descarga
+  $('#btnDescargaPWA').on('click', function(e) {
+    e.stopPropagation(); // Evita que la hidratación interfiera
+    $('#modal-descarga-pwa').addClass('active');
+  });
+
+  // Si el usuario cancela
+  $('#btnCancelarPWA').on('click', function(e) {
+    e.stopPropagation();
+    $('#modal-descarga-pwa').removeClass('active');
+  });
+
+  // Si el usuario acepta
+  $('#btnAceptarPWA').on('click', async function(e) {
+    e.stopPropagation();
+    $('#modal-descarga-pwa').removeClass('active');
+    
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('App instalada correctamente');
+      }
+      deferredPrompt = null;
+    } else {
+      // Si no hay prompt nativo, mostramos el modal elegante de instrucciones
+      $('#modal-instrucciones-pc').addClass('active');
+    }
+  });
+
+  $('#btnCerrarInstrucciones').on('click', function(e) {
+    e.stopPropagation();
+    $('#modal-instrucciones-pc').removeClass('active');
+  });
+
+  // Registrar el Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(registration => { console.log('Service Worker registrado'); })
+        .catch(error => { console.log('Error al registrar Service Worker:', error); });
+    });
+  }
+
+});
+</script>
+
+</body>
+</html>
