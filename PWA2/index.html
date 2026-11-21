@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Portafolio de Nicolás: perfil, horario, música, fotos y contacto.">
+<title>Nicolás – Portafolio PWA</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f97316">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!-- jQuery por CDN: el service worker lo guarda para usarlo sin internet -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<style>
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.78); --glass-border: rgba(255, 255, 255, 0.55);
+    --accent-blue: #2563eb; --text-main: #0f172a; --text-muted: #334155;
+    --sidebar-bg: rgba(255, 255, 255, 0.96); --modal-bg: #f8fafc; --modal-overlay: rgba(255, 255, 255, 0.7);
+    --accent-orange: #f97316; --glow-orange: rgba(249, 115, 22, 0.5); --card-bg: rgba(255, 255, 255, 0.95);
+    --danger: #dc2626; --input-bg: #ffffff; --input-border: #cbd5e1;
+  }
+  body.dark-mode {
+    --glass-bg: rgba(15, 25, 50, 0.78); --glass-border: rgba(100, 180, 255, 0.3);
+    --accent-blue: #4aa8ff; --text-main: #e8f0ff; --text-muted: #cbd5e1;
+    --sidebar-bg: rgba(13, 26, 46, 0.96); --modal-bg: #0f172a; --modal-overlay: rgba(3, 8, 18, 0.8);
+    --accent-orange: #fb923c; --glow-orange: rgba(251, 146, 60, 0.6); --card-bg: rgba(30, 41, 59, 0.95);
+    --danger: #f87171; --input-bg: #1e293b; --input-border: #475569;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; width: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text-main); background: #000; transition: color .4s; }
+  body { height: 100vh; height: 100dvh; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  .ic { width: 1em; height: 1em; fill: currentColor; flex: none; vertical-align: -.125em; }
+  :focus-visible { outline: 3px solid var(--accent-orange); outline-offset: 2px; }
+
+  /* ===== FONDO: tus imágenes de día y de noche (se configuran en app.js → FONDOS); sin imagen, un degradado ===== */
+  .bg-carousel { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #1a2a4a; }
+  .bg-carousel::after { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,.08), rgba(0,0,0,.28)); }
+  .bg-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.5s ease-in-out; }
+  .bg-slide.active { opacity: 1; }
+  .bg-slide::before, .bg-slide::after { content: ''; position: absolute; inset: 0; background-size: cover; background-position: center; transition: opacity 1s ease; }
+  .bg-slide::after { opacity: 0; }
+  body.dark-mode .bg-slide::before { opacity: 0; }
+  body.dark-mode .bg-slide::after { opacity: 1; }
+  .bg-slide:nth-child(1)::before { background-image: var(--bg1-dia, linear-gradient(180deg,#5db6f5,#bfe6ff 60%,#fff0cf)); }
+  .bg-slide:nth-child(1)::after  { background-image: var(--bg1-noche, linear-gradient(180deg,#050b1f,#16264f 55%,#3a3f73)); }
+  .bg-slide:nth-child(2)::before { background-image: var(--bg2-dia, linear-gradient(180deg,#5bb8f5,#bfe6ff 60%,#ffe9b8)); }
+  .bg-slide:nth-child(2)::after  { background-image: var(--bg2-noche, linear-gradient(180deg,#0a0f2a,#1b1a4a 55%,#33377a)); }
+  .bg-slide:nth-child(3)::before { background-image: var(--bg3-dia, linear-gradient(180deg,#4fb3ff,#bfe9ff 60%,#ffe4b0)); }
+  .bg-slide:nth-child(3)::after  { background-image: var(--bg3-noche, linear-gradient(180deg,#060b22,#1c2a5e 55%,#4b4a8a)); }
+
+  /* ===== ESTRUCTURA ===== */
+  .hud { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; gap: 8px; padding: clamp(10px, 2.5vw, 40px); }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; flex: none; position: relative; z-index: 100; }
+  .profile-info { display: flex; align-items: center; gap: clamp(8px, 1.5vw, 16px); min-width: 0; background: var(--glass-bg); backdrop-filter: blur(8px); border: 2px solid var(--glass-border); border-radius: 18px; padding: 5px 16px 5px 5px; }
+  .avatar { width: clamp(44px, 6vw, 64px); height: clamp(44px, 6vw, 64px); border-radius: 13px; border: 3px solid var(--accent-orange); background: #000; object-fit: contain; flex: none; box-shadow: 0 0 10px var(--glow-orange); }
+  .info { min-width: 0; }
+  .info h1 { font-size: clamp(1.2rem, 3vw, 2.2rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .top-actions { display: flex; gap: clamp(5px, 1vw, 12px); flex: none; align-items: center; }
+  #estadoRed { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: .8rem; font-weight: 700; color: #0f172a; background: #dcfce7; transition: background .3s; }
+  #estadoRed.offline { background: #fef08a; }
+  .btn-square { width: clamp(38px, 4vw, 45px); height: clamp(38px, 4vw, 45px); border-radius: 12px; background: var(--glass-bg); backdrop-filter: blur(8px); border: 2px solid var(--accent-orange); color: var(--text-main); font-size: clamp(1rem, 1.5vw, 1.2rem); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(0,0,0,.3); transition: transform .2s; }
+  .btn-square:hover { transform: scale(1.1); }
+
+  .center-content { flex: 1; min-height: 0; display: flex; justify-content: space-between; align-items: center; }
+  .floating-buttons { display: flex; flex-direction: column; gap: clamp(10px, 2.5vh, 26px); }
+  .float-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: clamp(.75rem, 1.2vw, 1rem); font-weight: 600; transition: transform .2s; }
+  .float-btn:hover { transform: scale(1.05); }
+  .float-btn span { background: var(--glass-bg); backdrop-filter: blur(6px); padding: 2px 10px; border-radius: 20px; }
+  .float-btn .icon-wrap { width: clamp(52px, 6vw, 75px); height: clamp(52px, 6vw, 75px); border-radius: 18px; background: var(--glass-bg); backdrop-filter: blur(10px); border: 2px solid var(--accent-blue); display: flex; align-items: center; justify-content: center; font-size: clamp(1.3rem, 2.5vw, 2rem); box-shadow: 0 5px 15px rgba(0,0,0,.4); }
+  .float-btn:hover .icon-wrap { border-color: var(--accent-orange); box-shadow: 0 0 15px var(--accent-orange); }
+  .float-btn.contact .icon-wrap { border-color: var(--accent-orange); }
+
+  footer { display: flex; justify-content: space-around; align-items: center; background: var(--glass-bg); backdrop-filter: blur(15px); border: 2px solid var(--accent-orange); border-radius: 20px; padding: clamp(6px, 1.2vh, 14px) 4px; flex: none; width: 100%; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: clamp(.6rem, 1vw, .9rem); transition: color .3s; min-width: 0; }
+  .nav-item .ic { font-size: clamp(1.1rem, 2vw, 1.7rem); }
+  .nav-item.active, .nav-item:hover { color: var(--accent-orange); text-shadow: 0 0 10px var(--glow-orange); }
+
+  #sidebar { position: absolute; top: 100%; right: 0; width: 220px; background: var(--sidebar-bg); backdrop-filter: blur(15px); border: 2px solid var(--accent-orange); border-radius: 15px; padding: 10px; display: flex; flex-direction: column; gap: 5px; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: opacity .3s, transform .3s, visibility 0s .3s; z-index: 150; }
+  #sidebar.active { opacity: 1; visibility: visible; transform: none; transition: opacity .3s, transform .3s; }
+  #sidebar .nav-item { flex-direction: row; justify-content: flex-start; padding: 10px 15px; border-radius: 10px; gap: 15px; font-size: 1rem; width: 100%; }
+  #sidebar .nav-item:hover { background: rgba(249, 115, 22, .2); }
+
+  /* ===== MODALES ===== */
+  .modal-overlay { position: fixed; inset: 0; background: var(--modal-overlay); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity .3s, visibility 0s .3s; z-index: 200; padding: 14px; }
+  .modal-overlay.active { opacity: 1; visibility: visible; transition: opacity .3s; }
+  .modal { background: var(--modal-bg); border: 2px solid var(--accent-orange); box-shadow: 0 10px 40px rgba(0,0,0,.5); border-radius: 20px; width: 100%; max-width: 900px; max-height: 88vh; max-height: 88dvh; overflow-y: auto; padding: clamp(14px, 2vw, 25px); transform: translateY(20px); transition: transform .3s; }
+  .modal-overlay.active .modal { transform: none; }
+  .modal.narrow { max-width: 460px; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
+  .modal h2 { font-size: clamp(1.1rem, 2vw, 1.5rem); font-weight: 600; }
+  .modal-close { color: var(--text-muted); font-size: 1.4rem; width: 36px; height: 36px; border-radius: 50%; transition: color .3s; flex: none; }
+  .modal-close:hover { color: var(--accent-orange); }
+  .modal p { line-height: 1.5; }
+  .quote { margin-top: 18px; padding: 12px 16px; border-left: 4px solid var(--accent-orange); background: var(--glass-bg); border-radius: 0 12px 12px 0; }
+  .quote p { font-style: italic; font-size: 1.05rem; }
+  .quote-author { display: block; margin-top: 6px; font-weight: 700; color: var(--accent-orange); }
+
+  .btn-pwa { flex: 1; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 1rem; transition: transform .2s, opacity .2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+  .btn-pwa:active { transform: translateY(1px); }
+  .btn-pwa-cancel { background: #64748b; color: #fff; }
+  .btn-pwa-accept { background: var(--accent-orange); color: #fff; }
+  .btn-pwa:disabled { opacity: .5; cursor: not-allowed; }
+
+  .filter-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .btn-filter { border: 1px solid var(--glass-border); color: var(--text-muted); padding: 5px 12px; border-radius: 20px; font-size: .85rem; transition: all .2s; }
+  .btn-filter.active, .btn-filter:hover { background: var(--accent-orange); border-color: var(--accent-orange); color: #fff; }
+
+  .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+  .media-card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform .2s, box-shadow .2s; border-bottom: 3px solid var(--accent-orange); box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+  .media-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,.3); }
+  .thumb-img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; cursor: zoom-in; background: #1a2a4a; }
+  .only-night { display: none; } body.dark-mode .only-day { display: none; } body.dark-mode .only-night { display: block; }
+  .avatar.zoomable, .photo img { cursor: zoom-in; }
+  .thumb-ph { aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #334155, #0f172a); color: rgba(255,255,255,.5); }
+  .thumb-ph .ic { width: 44px; height: 44px; }
+  .media-info { padding: 12px; flex: 1; display: flex; flex-direction: column; }
+  .media-title { font-size: .95rem; font-weight: 700; margin-bottom: 4px; }
+  .media-subtitle { font-size: .78rem; color: var(--text-muted); margin-bottom: 8px; }
+  .media-desc { font-size: .8rem; color: var(--text-muted); line-height: 1.4; }
+  .btn-listen { margin-top: auto; padding: 8px; border-radius: 8px; background: var(--accent-orange); color: #fff; font-weight: 700; font-size: .85rem; text-align: center; text-decoration: none; display: block; }
+  .btn-listen:hover { filter: brightness(1.1); }
+  body.offline .btn-listen { opacity: .5; }
+
+  .schedule-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: .9rem; }
+  .schedule-table th, .schedule-table td { border: 1px solid var(--glass-border); padding: 10px; text-align: left; }
+  .schedule-table th { background: var(--glass-bg); font-weight: 700; }
+  .schedule-table tr:nth-child(even) { background: var(--card-bg); }
+
+  .social-links { display: flex; gap: 15px; margin-top: 15px; }
+  .social-icon { display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; border-radius: 12px; background: var(--glass-bg); border: 2px solid var(--accent-orange); color: var(--text-main); font-size: 1.3rem; text-decoration: none; transition: all .3s; }
+  .social-icon:hover { background: var(--accent-orange); color: #fff; transform: translateY(-3px); }
+
+  /* ===== FORMULARIO DE CONTACTO ===== */
+  .field { margin-bottom: 12px; }
+  .field label, .check { font-size: .88rem; font-weight: 600; }
+  .field label { display: block; margin-bottom: 5px; }
+  .field input, .field select, .field textarea { width: 100%; padding: 11px 13px; border: 1.5px solid var(--input-border); background: var(--input-bg); color: var(--text-main); border-radius: 10px; font: inherit; }
+  .field textarea { resize: vertical; min-height: 96px; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent-orange); outline: none; box-shadow: 0 0 0 3px var(--glow-orange); }
+  .field .invalid { border-color: var(--danger); }
+  .field-foot { display: flex; justify-content: space-between; gap: 10px; }
+  .error-msg { display: block; min-height: 16px; margin-top: 3px; font-size: .78rem; color: var(--danger); }
+  .counter { font-size: .78rem; color: var(--text-muted); white-space: nowrap; }
+  .check { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; cursor: pointer; }
+  .check input { margin-top: 3px; accent-color: var(--accent-orange); }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+  /* ===== FOTOS ===== */
+  .photo-bar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 14px; }
+  .photo-bar .btn-pwa { flex: none; padding: 10px 16px; }
+  .photo-count { font-size: .88rem; color: var(--text-muted); }
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+  .photo { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 2px solid var(--glass-border); padding: 0; }
+  .photo:hover { border-color: var(--accent-orange); }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #gridFotos:empty::before { content: "Pronto habrá fotos aquí."; grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 30px 10px; }
+  .photo-empty { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 30px 10px; }
+  .visor { max-width: 900px; text-align: center; }
+  .visor img { max-width: 100%; max-height: 62vh; max-height: 62dvh; border-radius: 12px; object-fit: contain; }
+  .visor-actions { display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 12px; }
+  .visor-actions .btn-pwa { flex: none; padding: 9px 16px; }
+
+  /* ===== TOAST ===== */
+  .toast { position: fixed; top: 14px; left: 50%; transform: translate(-50%, -150%); z-index: 400; max-width: min(92vw, 420px); padding: 12px 18px; border-radius: 12px; background: #0f172a; color: #fff; font-weight: 600; font-size: .92rem; border-left: 5px solid var(--accent-orange); box-shadow: 0 10px 30px rgba(0,0,0,.4); transition: transform .35s ease; }
+  .toast.show { transform: translate(-50%, 0); }
+  .toast.error { border-left-color: #ef4444; }
+
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    #estadoRed .net-text { display: none; }
+    #estadoRed { padding: 6px 9px; }
+    .profile-info { padding-right: 10px; }
+  }
+  @media (max-height: 460px) {            /* celular en horizontal */
+    .hud { gap: 4px; padding: 8px 12px; }
+    header { padding: 2px 0; }
+    .floating-buttons { flex-direction: row; gap: 14px; }
+    .float-btn .icon-wrap { width: 46px; height: 46px; font-size: 1.2rem; border-radius: 14px; }
+    .float-btn { gap: 3px; font-size: .7rem; }
+    footer { padding: 4px; border-radius: 14px; }
+    .nav-item { flex-direction: row; gap: 6px; font-size: .75rem; }
+    .nav-item .ic { font-size: 1.1rem; }
+    .modal { max-height: 94vh; max-height: 94dvh; }
+  }
+  @media (max-height: 340px) { .nav-item span { display: none; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+<!-- =====================================================================================
+  ★ DÓNDE PONER TUS IMÁGENES Y DATOS ★   (todo se hace en este archivo; app.js no se toca)
+  1) Copia tus imágenes a una carpeta llamada "img", junto a este archivo.
+  2) TARJETAS (Intereses, Videojuegos, Pasatiempos y Música): busca el comentario de cada sección con Ctrl+F
+     (INTERESES, VIDEOJUEGOS, PASATIEMPOS, MÚSICA) y escribe la ruta dentro del <img> de cada tarjeta:
+         <img class="thumb-img zoomable" src="" ...>   →   src="img/cs2.jpg"
+     Si lo dejas en src="" se muestra un recuadro vacío. Al tocar cualquier imagen se abre completa.
+  3) "Ver Paisajes" (en PASATIEMPOS) tiene dos <img>: el primero es de día y el segundo de noche (se cambia con el modo oscuro).
+  4) FONDOS: justo debajo, en los tres <div class="bg-slide" ...>, escribe data-dia="img/dia1.jpg" data-noche="img/noche1.jpg".
+  5) FOTOS: busca "MIS FOTOS" y agrega una línea por foto.
+  6) MÚSICA: en cada canción escribe su enlace de YouTube en data-video="".
+  7) CORREO: en <form id="formContacto" data-email=""> escribe tu correo.
+  8) REDES: busca "MIS REDES" y cambia los href.
+====================================================================================== -->
+
+<!-- Íconos: Font Awesome Free (CC BY 4.0), incrustados para funcionar sin internet -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-bars" viewBox="0 0 448 512"><path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"/></symbol><symbol id="i-calendar-days" viewBox="0 0 448 512"><path d="M128 0c17.7 0 32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 48 0c26.5 0 48 21.5 48 48l0 48L0 160l0-48C0 85.5 21.5 64 48 64l48 0 0-32c0-17.7 14.3-32 32-32zM0 192l448 0 0 272c0 26.5-21.5 48-48 48L48 512c-26.5 0-48-21.5-48-48L0 192zm64 80l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm128 0l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zM64 400l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zm112 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16z"/></symbol><symbol id="i-chevron-left" viewBox="0 0 320 512"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/></symbol><symbol id="i-chevron-right" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></symbol><symbol id="i-compact-disc" viewBox="0 0 512 512"><path d="M0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm256 32a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm-96-32a96 96 0 1 0 192 0 96 96 0 1 0 -192 0zM96 240c0-35 17.5-71.1 45.2-98.8S205 96 240 96c8.8 0 16-7.2 16-16s-7.2-16-16-16c-45.4 0-89.2 22.3-121.5 54.5S64 194.6 64 240c0 8.8 7.2 16 16 16s16-7.2 16-16z"/></symbol><symbol id="i-envelope" viewBox="0 0 512 512"><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48L48 64zM0 176L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-208L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/></symbol><symbol id="i-facebook-f" viewBox="0 0 320 512"><path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"/></symbol><symbol id="i-gamepad" viewBox="0 0 640 512"><path d="M192 64C86 64 0 150 0 256S86 448 192 448l256 0c106 0 192-86 192-192s-86-192-192-192L192 64zM496 168a40 40 0 1 1 0 80 40 40 0 1 1 0-80zM392 304a40 40 0 1 1 80 0 40 40 0 1 1 -80 0zM168 200c0-13.3 10.7-24 24-24s24 10.7 24 24l0 32 32 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-32 0 0 32c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-32-32 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l32 0 0-32z"/></symbol><symbol id="i-github" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></symbol><symbol id="i-images" viewBox="0 0 576 512"><path d="M160 32c-35.3 0-64 28.7-64 64l0 224c0 35.3 28.7 64 64 64l352 0c35.3 0 64-28.7 64-64l0-224c0-35.3-28.7-64-64-64L160 32zM396 138.7l96 144c4.9 7.4 5.4 16.8 1.2 24.6S480.9 320 472 320l-144 0-48 0-80 0c-9.2 0-17.6-5.3-21.6-13.6s-2.9-18.2 2.9-25.4l64-80c4.6-5.7 11.4-9 18.7-9s14.2 3.3 18.7 9l17.3 21.6 56-84C360.5 132 368 128 376 128s15.5 4 20 10.7zM192 128a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM48 120c0-13.3-10.7-24-24-24S0 106.7 0 120L0 344c0 75.1 60.9 136 136 136l320 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-320 0c-48.6 0-88-39.4-88-88l0-224z"/></symbol><symbol id="i-instagram" viewBox="0 0 448 512"><path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"/></symbol><symbol id="i-lightbulb" viewBox="0 0 384 512"><path d="M272 384c9.6-31.9 29.5-59.1 49.2-86.2c0 0 0 0 0 0c5.2-7.1 10.4-14.2 15.4-21.4c19.8-28.5 31.4-63 31.4-100.3C368 78.8 289.2 0 192 0S16 78.8 16 176c0 37.3 11.6 71.9 31.4 100.3c5 7.2 10.2 14.3 15.4 21.4c0 0 0 0 0 0c19.8 27.1 39.7 54.4 49.2 86.2l160 0zM192 512c44.2 0 80-35.8 80-80l0-16-160 0 0 16c0 44.2 35.8 80 80 80zM112 176c0 8.8-7.2 16-16 16s-16-7.2-16-16c0-61.9 50.1-112 112-112c8.8 0 16 7.2 16 16s-7.2 16-16 16c-44.2 0-80 35.8-80 80z"/></symbol><symbol id="i-palette" viewBox="0 0 512 512"><path d="M512 256c0 .9 0 1.8 0 2.7c-.4 36.5-33.6 61.3-70.1 61.3L344 320c-26.5 0-48 21.5-48 48c0 3.4 .4 6.7 1 9.9c2.1 10.2 6.5 20 10.8 29.9c6.1 13.8 12.1 27.5 12.1 42c0 31.8-21.6 60.7-53.4 62c-3.5 .1-7 .2-10.6 .2C114.6 512 0 397.4 0 256S114.6 0 256 0S512 114.6 512 256zM128 288a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm0-96a32 32 0 1 0 0-64 32 32 0 1 0 0 64zM288 96a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm96 96a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></symbol><symbol id="i-paper-plane" viewBox="0 0 512 512"><path d="M498.1 5.6c10.1 7 15.4 19.1 13.5 31.2l-64 416c-1.5 9.7-7.4 18.2-16 23s-18.9 5.4-28 1.6L284 427.7l-68.5 74.1c-8.9 9.7-22.9 12.9-35.2 8.1S160 493.2 160 480l0-83.6c0-4 1.5-7.8 4.2-10.8L331.8 202.8c5.8-6.3 5.6-16-.4-22s-15.7-6.4-22-.7L106 360.8 17.7 316.6C7.1 311.3 .3 300.7 0 288.9s5.9-22.8 16.1-28.7l448-256c10.7-6.1 23.9-5.5 34 1.4z"/></symbol><symbol id="i-share-nodes" viewBox="0 0 448 512"><path d="M352 224c53 0 96-43 96-96s-43-96-96-96s-96 43-96 96c0 4 .2 8 .7 11.9l-94.1 47C145.4 170.2 121.9 160 96 160c-53 0-96 43-96 96s43 96 96 96c25.9 0 49.4-10.2 66.6-26.9l94.1 47c-.5 3.9-.7 7.8-.7 11.9c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-25.9 0-49.4 10.2-66.6 26.9l-94.1-47c.5-3.9 .7-7.8 .7-11.9s-.2-8-.7-11.9l94.1-47C302.6 213.8 326.1 224 352 224z"/></symbol><symbol id="i-user-astronaut" viewBox="0 0 448 512"><path d="M370.7 96.1C346.1 39.5 289.7 0 224 0S101.9 39.5 77.3 96.1C60.9 97.5 48 111.2 48 128l0 64c0 16.8 12.9 30.5 29.3 31.9C101.9 280.5 158.3 320 224 320s122.1-39.5 146.7-96.1c16.4-1.4 29.3-15.1 29.3-31.9l0-64c0-16.8-12.9-30.5-29.3-31.9zM336 144l0 16c0 53-43 96-96 96l-32 0c-53 0-96-43-96-96l0-16c0-26.5 21.5-48 48-48l128 0c26.5 0 48 21.5 48 48zM189.3 162.7l-6-21.2c-.9-3.3-3.9-5.5-7.3-5.5s-6.4 2.2-7.3 5.5l-6 21.2-21.2 6c-3.3 .9-5.5 3.9-5.5 7.3s2.2 6.4 5.5 7.3l21.2 6 6 21.2c.9 3.3 3.9 5.5 7.3 5.5s6.4-2.2 7.3-5.5l6-21.2 21.2-6c3.3-.9 5.5-3.9 5.5-7.3s-2.2-6.4-5.5-7.3l-21.2-6zM112.7 316.5C46.7 342.6 0 407 0 482.3C0 498.7 13.3 512 29.7 512l98.3 0 0-64c0-17.7 14.3-32 32-32l128 0c17.7 0 32 14.3 32 32l0 64 98.3 0c16.4 0 29.7-13.3 29.7-29.7c0-75.3-46.7-139.7-112.7-165.8C303.9 338.8 265.5 352 224 352s-79.9-13.2-111.3-35.5zM176 448c-8.8 0-16 7.2-16 16l0 48 32 0 0-48c0-8.8-7.2-16-16-16zm96 32a16 16 0 1 0 0-32 16 16 0 1 0 0 32z"/></symbol><symbol id="i-xmark" viewBox="0 0 384 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></symbol><symbol id="i-youtube" viewBox="0 0 576 512"><path d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"/></symbol></svg>
+
+<!-- FONDO -->
+<div class="bg-carousel" aria-hidden="true">
+  <div class="bg-slide active" data-dia="img/paisajeDia3.jpg" data-noche="img/paisajeNoche3.webp"></div>
+  <div class="bg-slide" data-dia="img/paisajeDia.jpg" data-noche="img/paisajeNoche.webp"></div>
+  <div class="bg-slide" data-dia="img/paisajeDia2.jpg" data-noche="img/paisajeNoche2.webp"></div>
+</div>
+
+<div class="hud" id="contenedorMenu">
+  <header>
+    <div class="profile-info">
+      <img src="icon-512.png" alt="Logo de Nicolás" class="avatar zoomable">
+      <div class="info"><h1>Nicolás</h1></div>
+    </div>
+    <div class="top-actions">
+      <div id="estadoRed" role="status" aria-live="polite"><span class="net-icon">🌐</span><span class="net-text">En línea</span></div>
+      <button type="button" class="btn-square" id="themeBtn" aria-label="Cambiar a modo oscuro" aria-pressed="false">🌙</button>
+      <button type="button" class="btn-square" id="menuToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="sidebar"><svg class="ic" aria-hidden="true"><use href="#i-bars"/></svg></button>
+    </div>
+
+    <aside id="sidebar" aria-label="Menú">
+      <button type="button" class="nav-item" data-open="modal-perfil"><svg class="ic" aria-hidden="true"><use href="#i-user-astronaut"/></svg><span>Perfil</span></button>
+      <button type="button" class="nav-item" data-open="modal-horario"><svg class="ic" aria-hidden="true"><use href="#i-calendar-days"/></svg><span>Horario</span></button>
+      <button type="button" class="nav-item" data-open="modal-musica"><svg class="ic" aria-hidden="true"><use href="#i-compact-disc"/></svg><span>Música</span></button>
+      <button type="button" class="nav-item" data-open="modal-fotos"><svg class="ic" aria-hidden="true"><use href="#i-images"/></svg><span>Fotos</span></button>
+      <button type="button" class="nav-item" data-open="modal-redes"><svg class="ic" aria-hidden="true"><use href="#i-share-nodes"/></svg><span>Redes</span></button>
+      <button type="button" class="nav-item" data-open="modal-contacto"><svg class="ic" aria-hidden="true"><use href="#i-envelope"/></svg><span>Contacto</span></button>
+    </aside>
+  </header>
+
+  <div class="center-content">
+    <div class="floating-buttons">
+      <button type="button" class="float-btn" data-open="modal-pasatiempos"><div class="icon-wrap"><svg class="ic" aria-hidden="true"><use href="#i-palette"/></svg></div><span>Pasatiempos</span></button>
+      <button type="button" class="float-btn" data-open="modal-intereses"><div class="icon-wrap"><svg class="ic" aria-hidden="true"><use href="#i-lightbulb"/></svg></div><span>Intereses</span></button>
+      <button type="button" class="float-btn" data-open="modal-videojuegos"><div class="icon-wrap"><svg class="ic" aria-hidden="true"><use href="#i-gamepad"/></svg></div><span>Videojuegos</span></button>
+    </div>
+    <div class="floating-buttons">
+      <button type="button" class="float-btn contact" data-open="modal-contacto"><div class="icon-wrap"><svg class="ic" aria-hidden="true"><use href="#i-envelope"/></svg></div><span>Contacto</span></button>
+    </div>
+  </div>
+
+  <footer>
+    <button type="button" class="nav-item" data-open="modal-perfil"><svg class="ic" aria-hidden="true"><use href="#i-user-astronaut"/></svg><span>Perfil</span></button>
+    <button type="button" class="nav-item" data-open="modal-horario"><svg class="ic" aria-hidden="true"><use href="#i-calendar-days"/></svg><span>Horario</span></button>
+    <button type="button" class="nav-item" data-open="modal-musica"><svg class="ic" aria-hidden="true"><use href="#i-compact-disc"/></svg><span>Música</span></button>
+    <button type="button" class="nav-item" data-open="modal-fotos"><svg class="ic" aria-hidden="true"><use href="#i-images"/></svg><span>Fotos</span></button>
+    <button type="button" class="nav-item" data-open="modal-redes"><svg class="ic" aria-hidden="true"><use href="#i-share-nodes"/></svg><span>Redes</span></button>
+  </footer>
+</div>
+
+<!-- ============ MODALES ============ -->
+<!-- INTERESES: en cada tarjeta escribe la ruta de tu imagen dentro del <img>, así: src="img/archivo.jpg" -->
+<div class="modal-overlay" id="modal-intereses" role="dialog" aria-modal="true" aria-labelledby="t-intereses">
+  <div class="modal">
+    <div class="modal-header"><h2 id="t-intereses">Intereses Productivos</h2><button type="button" class="modal-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-xmark"/></svg></button></div>
+    <div class="media-grid">
+      <div class="media-card"><img class="thumb-img zoomable" src="img/progra.avif" alt="Programación" width="640" height="360"><div class="media-info"><div class="media-title">Programación</div></div></div>
+      <div class="media-card"><img class="thumb-img zoomable" src="img/edit_vid.jpg" alt="Editar Videos" width="640" height="360"><div class="media-info"><div class="media-title">Editar Videos</div></div></div>
+      <div class="media-card"><img class="thumb-img zoomable" src="img/cocina.jpg" alt="Cocinar" width="640" height="360"><div class="media-info"><div class="media-title">Cocinar</div></div></div>
+      <div class="media-card"><img class="thumb-img zoomable" src="img/venta.avif" alt="Trabajo de Ventas" width="640" height="360"><div class="media-info"><div class="media-title">Trabajo de Ventas</div></div></div>
+      <div class="media-card"><img class="thumb-img zoomable" src="img/limpiez.webp" alt="Limpieza del Hogar" width="640" height="360"><div class="media-info"><div class="media-title">Limpieza del Hogar</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEOJUEGOS: en cada tarjeta escribe la ruta de tu imagen dentro del <img>, así: src="img/archivo.jpg" -->
+<div class="modal-overlay" id="modal-videojuegos" role="dialog" aria-modal="true" aria-labelledby="t-juegos">
+  <div class="modal">
+    <div class="modal-header"><h2 id="t-juegos">Mis Juegos Favoritos</h2><button type="button" class="modal-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-xmark"/></svg></button></div>
+    <div class="filter-buttons">
+      <button type="button" class="btn-filter active" data-filter="todos">Todos</button>
+      <button type="button" class="btn-filter" data-filter="shooter">Shooter</button>
+      <button type="button" class="btn-filter" data-filter="terror">Terror</button>
+      <button type="button" class="btn-filter" data-filter="fantasia">Fantasía</button>
+      <button type="button" class="btn-filter" data-filter="movil">Móvil</button>
+    </div>
+    <div class="media-grid">
+      <div class="media-card" data-category="shooter"><img class="thumb-img zoomable" src="img/countersit.webp" alt="Counter-Strike 2" width="640" height="360"><div class="media-info"><div class="media-title">Counter-Strike 2</div><div class="media-desc">Terroristas vs Antiterroristas. Un shooter táctico 5v5 donde la estrategia y la puntería definen la victoria.</div></div></div>
+      <div class="media-card" data-category="terror"><img class="thumb-img zoomable" src="img/lefitas.jpeg" alt="Left 4 Dead 2" width="640" height="360"><div class="media-info"><div class="media-title">Left 4 Dead 2</div><div class="media-desc">Supervivencia zombi. Tú y 3 amigos deben escapar de hordas de infectados en un mundo post-apocalíptico.</div></div></div>
+      <div class="media-card" data-category="fantasia"><img class="thumb-img zoomable" src="img/whichit.webp" alt="The Witcher 3" width="640" height="360"><div class="media-info"><div class="media-title">The Witcher 3</div><div class="media-desc">RPG de mundo abierto. Eres Geralt de Rivia, un cazador de monstruos en busca de su hija adoptiva, Ciri.</div></div></div>
+      <div class="media-card" data-category="movil"><img class="thumb-img zoomable" src="img/geometri.jpg" alt="Geometry Dash" width="640" height="360"><div class="media-info"><div class="media-title">Geometry Dash</div><div class="media-desc">Plataformas rítmico. Salta y esquiva obstáculos al ritmo de la música electrónica.</div></div></div>
+      <div class="media-card" data-category="movil"><img class="thumb-img zoomable" src="img/bodrioLegends.webp" alt="Dragon Ball Legends" width="640" height="360"><div class="media-info"><div class="media-title">Dragon Ball Legends</div><div class="media-desc">Juego de lucha 3D para móviles. Reúne a tus guerreros favoritos y participa en batallas PvP.</div></div></div>
+      <div class="media-card" data-category="shooter"><img class="thumb-img zoomable" src="img/valoramesta.webp" alt="Valorant" width="640" height="360"><div class="media-info"><div class="media-title">Valorant</div><div class="media-desc">Shooter táctico 5v5 con personajes que tienen habilidades únicas. Combina puntería con estrategia.</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PASATIEMPOS: en cada tarjeta escribe la ruta de tu imagen dentro del <img>, así: src="img/archivo.jpg" -->
+<div class="modal-overlay" id="modal-pasatiempos" role="dialog" aria-modal="true" aria-labelledby="t-pasa">
+  <div class="modal">
+    <div class="modal-header"><h2 id="t-pasa">Mis Pasatiempos</h2><button type="button" class="modal-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-xmark"/></svg></button></div>
+    <div class="media-grid">
+      <div class="media-card"><img class="thumb-img zoomable only-day" src="img/paizaj.webp" alt="Paisaje de día" width="640" height="360"><img class="thumb-img zoomable only-night" src="" alt="Paisaje de noche" width="640" height="360"><div class="media-info"><div class="media-title">Ver Paisajes</div></div></div>
+      <div class="media-card"><img class="thumb-img zoomable" src="img/histi.jpeg" alt="Escribir Historias" width="640" height="360"><div class="media-info"><div class="media-title">Escribir Historias</div></div></div>
+      <div class="media-card"><img class="thumb-img zoomable" src="img/caminat.webp" alt="Caminatas" width="640" height="360"><div class="media-info"><div class="media-title">Caminatas</div></div></div>
+      <div class="media-card"><img class="thumb-img zoomable" src="img/videit.webp" alt="Ver Videos" width="640" height="360"><div class="media-info"><div class="media-title">Ver Videos</div></div></div>
+      <div class="media-card"><img class="thumb-img zoomable" src="img/music.webp" alt="Escuchar Música" width="640" height="360"><div class="media-info"><div class="media-title">Escuchar Música</div></div></div>
+      <div class="media-card"><img class="thumb-img zoomable" src="img/jueg.jpg" alt="Videojuegos" width="640" height="360"><div class="media-info"><div class="media-title">Videojuegos</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MÚSICA: en cada tarjeta escribe la ruta de tu imagen en src="" (opcional) y el enlace de YouTube de la canción en data-video="" (ej. data-video="https://youtu.be/XXXXXXXXXXX").
+     Con el enlace, el botón "Escuchar" abre ese video y, si no pusiste imagen, se usa su miniatura (necesita internet). -->
+<div class="modal-overlay" id="modal-musica" role="dialog" aria-modal="true" aria-labelledby="t-musica">
+  <div class="modal">
+    <div class="modal-header"><h2 id="t-musica">Música Favorita</h2><button type="button" class="modal-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-xmark"/></svg></button></div>
+    <div class="filter-buttons">
+      <button type="button" class="btn-filter active" data-filter="todos">Todos</button>
+      <button type="button" class="btn-filter" data-filter="romantica">Romántica</button>
+      <button type="button" class="btn-filter" data-filter="rock">Bandas / Rock</button>
+    </div>
+    <!-- Cada tarjeta abre la búsqueda exacta de la canción en YouTube (el enlace siempre es válido) -->
+    <div class="media-grid">
+      <div class="media-card" data-category="romantica" data-video=""><img class="thumb-img zoomable" src="music/mencha.jpg" alt="Me Enamoré de Ti – Chayanne" width="640" height="360"><div class="media-info"><div class="media-title">Me Enamoré de Ti</div><div class="media-subtitle">Chayanne</div><a class="btn-listen" href="https://www.youtube.com/results?search_query=Chayanne+Me+Enamor%C3%A9+de+Ti" target="_blank" rel="noopener noreferrer"><svg class="ic" aria-hidden="true"><use href="#i-youtube"/></svg> Escuchar</a></div></div>
+      <div class="media-card" data-category="romantica" data-video=""><img class="thumb-img zoomable" src="music/arjonasapee.jpg" alt="Señora de las 4 Décadas – Ricardo Arjona" width="640" height="360"><div class="media-info"><div class="media-title">Señora de las 4 Décadas</div><div class="media-subtitle">Ricardo Arjona</div><a class="btn-listen" href="https://www.youtube.com/results?search_query=Ricardo+Arjona+Se%C3%B1ora+de+las+Cuatro+D%C3%A9cadas" target="_blank" rel="noopener noreferrer"><svg class="ic" aria-hidden="true"><use href="#i-youtube"/></svg> Escuchar</a></div></div>
+      <div class="media-card" data-category="rock" data-video=""><img class="thumb-img zoomable" src="music/believer.jpg" alt="Believer – Imagine Dragons" width="640" height="360"><div class="media-info"><div class="media-title">Believer</div><div class="media-subtitle">Imagine Dragons</div><a class="btn-listen" href="https://www.youtube.com/results?search_query=Imagine+Dragons+Believer" target="_blank" rel="noopener noreferrer"><svg class="ic" aria-hidden="true"><use href="#i-youtube"/></svg> Escuchar</a></div></div>
+      <div class="media-card" data-category="rock" data-video=""><img class="thumb-img zoomable" src="music/thunder.jpeg" alt="Thunder – Imagine Dragons" width="640" height="360"><div class="media-info"><div class="media-title">Thunder</div><div class="media-subtitle">Imagine Dragons</div><a class="btn-listen" href="https://www.youtube.com/results?search_query=Imagine+Dragons+Thunder" target="_blank" rel="noopener noreferrer"><svg class="ic" aria-hidden="true"><use href="#i-youtube"/></svg> Escuchar</a></div></div>
+      <div class="media-card" data-category="rock" data-video=""><img class="thumb-img zoomable" src="music/linkin.jpeg" alt="In The End – Linkin Park" width="640" height="360"><div class="media-info"><div class="media-title">In The End</div><div class="media-subtitle">Linkin Park</div><a class="btn-listen" href="https://www.youtube.com/results?search_query=Linkin+Park+In+The+End" target="_blank" rel="noopener noreferrer"><svg class="ic" aria-hidden="true"><use href="#i-youtube"/></svg> Escuchar</a></div></div>
+      <div class="media-card" data-category="rock" data-video=""><img class="thumb-img zoomable" src="music/numb.webp" alt="Numb – Linkin Park" width="640" height="360"><div class="media-info"><div class="media-title">Numb</div><div class="media-subtitle">Linkin Park</div><a class="btn-listen" href="https://www.youtube.com/results?search_query=Linkin+Park+Numb" target="_blank" rel="noopener noreferrer"><svg class="ic" aria-hidden="true"><use href="#i-youtube"/></svg> Escuchar</a></div></div>
+      <div class="media-card" data-category="rock" data-video=""><img class="thumb-img zoomable" src="music/bohemian.webp" alt="Bohemian Rhapsody – Queen" width="640" height="360"><div class="media-info"><div class="media-title">Bohemian Rhapsody</div><div class="media-subtitle">Queen</div><a class="btn-listen" href="https://www.youtube.com/results?search_query=Queen+Bohemian+Rhapsody" target="_blank" rel="noopener noreferrer"><svg class="ic" aria-hidden="true"><use href="#i-youtube"/></svg> Escuchar</a></div></div>
+    </div>
+    <p id="musicaOffline" style="display:none; margin-top:14px; font-size:.85rem; color:var(--text-muted)">📴 Sin conexión: las canciones se abren en YouTube y necesitan internet.</p>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-horario" role="dialog" aria-modal="true" aria-labelledby="t-horario">
+  <div class="modal">
+    <div class="modal-header"><h2 id="t-horario">Mi Horario</h2><button type="button" class="modal-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-xmark"/></svg></button></div>
+    <table class="schedule-table">
+      <thead><tr><th>Hora</th><th>Lunes a Viernes</th><th>Sábado</th></tr></thead>
+      <tbody>
+        <tr><td>8:00 - 12:00</td><td>Clases / Estudio</td><td>Descanso</td></tr>
+        <tr><td>12:00 - 14:00</td><td>Almuerzo</td><td>Almuerzo</td></tr>
+        <tr><td>14:00 - 18:00</td><td>Proyectos / Práctica</td><td>Hobbies</td></tr>
+        <tr><td>18:00 - 22:00</td><td>Tiempo libre</td><td>Tiempo libre</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MIS REDES: cambia los href de abajo por tus enlaces -->
+<div class="modal-overlay" id="modal-redes" role="dialog" aria-modal="true" aria-labelledby="t-redes">
+  <div class="modal">
+    <div class="modal-header"><h2 id="t-redes">Mis Redes</h2><button type="button" class="modal-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-xmark"/></svg></button></div>
+    <p>Conéctate conmigo a través de mis redes sociales:</p>
+    <!-- Los enlaces se cargan desde CONFIG en app.js -->
+    <div class="social-links">
+      <a id="lnk-facebook" class="social-icon" href="https://www.facebook.com/nicolasbenjamin.villegasherrera.3" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><svg class="ic" aria-hidden="true"><use href="#i-facebook-f"/></svg></a>
+      <a id="lnk-instagram" class="social-icon" href="https://www.instagram.com/izonk_5?evlk=MTN1Z3kxYmszNm5ybg==" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg class="ic" aria-hidden="true"><use href="#i-instagram"/></svg></a>
+      <a id="lnk-github" class="social-icon" href="https://github.com/Nicks555" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><svg class="ic" aria-hidden="true"><use href="#i-github"/></svg></a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-perfil" role="dialog" aria-modal="true" aria-labelledby="t-perfil">
+  <div class="modal">
+    <div class="modal-header"><h2 id="t-perfil">Mi Perfil</h2><button type="button" class="modal-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-xmark"/></svg></button></div>
+    <p>Soy Nicolás, estudiante de Ingeniería en Sistemas apasionado por la tecnología. Me enfoco en el desarrollo web frontend, creando interfaces modernas y funcionales.</p>
+    <blockquote class="quote"><p>“La única manera de hacer un gran trabajo es amar lo que haces.”</p><span class="quote-author">— Steve Jobs</span></blockquote>
+  </div>
+</div>
+
+<!-- ===== FOTOS: la lista de fotos se edita en app.js (constante FOTOS) ===== -->
+<!-- MIS FOTOS -->
+<div class="modal-overlay" id="modal-fotos" role="dialog" aria-modal="true" aria-labelledby="t-fotos">
+  <div class="modal">
+    <div class="modal-header"><h2 id="t-fotos">Mis Fotos</h2><button type="button" class="modal-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-xmark"/></svg></button></div>
+    <p class="photo-count" id="fotosContador" aria-live="polite"></p>
+    <!-- MIS FOTOS: agrega una línea como esta por cada foto (borra los signos <!-- y --> ):
+         <div class="photo"><img class="zoomable" src="fot/memit.jpeg" alt=""></div>    
+    <div class="photo-grid" id="gridFotos">
+     <div class="photo"><img class="zoomable" src="fot/nochit.jpeg" alt=""></div> 
+    <div class="photo"><img class="zoomable" src="fot/fot1.jpeg" alt=""></div>
+    <div class="photo"><img class="zoomable" src="fot/fot2.jpeg" alt=""></div>
+    <div class="photo"><img class="zoomable" src="fot/lion.jpeg" alt=""></div>
+    <div class="photo"><img class="zoomable" src="fot/ferry.jpeg" alt=""></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-visor" role="dialog" aria-modal="true" aria-label="Ver imagen">
+  <div class="modal visor">
+    <div class="modal-header"><h2 id="visorTitulo">Imagen</h2><button type="button" class="modal-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-xmark"/></svg></button></div>
+    <img id="visorImg" src="" alt="">
+    <div class="visor-actions">
+      <button type="button" class="btn-pwa btn-pwa-cancel" id="visorPrev" aria-label="Imagen anterior"><svg class="ic" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+      <span class="photo-count" id="visorContador"></span>
+      <button type="button" class="btn-pwa btn-pwa-cancel" id="visorNext" aria-label="Imagen siguiente"><svg class="ic" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CONTACTO ===== -->
+<div class="modal-overlay" id="modal-contacto" role="dialog" aria-modal="true" aria-labelledby="t-contacto">
+  <div class="modal narrow">
+    <div class="modal-header"><h2 id="t-contacto">Contacto</h2><button type="button" class="modal-close" aria-label="Cerrar"><svg class="ic" aria-hidden="true"><use href="#i-xmark"/></svg></button></div>
+    <!-- CORREO: escribe tu correo en data-email para recibir los mensajes. Ej.: data-email="nicolas@gmail.com" -->
+    <form id="formContacto" data-email="" novalidate>
+      <div class="field">
+        <label for="cNombre">Nombre</label>
+        <input id="cNombre" type="text" maxlength="40" autocomplete="name" placeholder="Ej. María Quispe">
+        <span class="error-msg" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <label for="cCorreo">Correo electrónico</label>
+        <input id="cCorreo" type="email" maxlength="80" autocomplete="email" inputmode="email" placeholder="tucorreo@ejemplo.com">
+        <span class="error-msg" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <label for="cCelular">Celular (opcional)</label>
+        <input id="cCelular" type="tel" maxlength="8" autocomplete="tel" inputmode="numeric" placeholder="Ej. 71234567">
+        <span class="error-msg" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <label for="cAsunto">Asunto</label>
+        <select id="cAsunto">
+          <option value="">Selecciona un asunto</option>
+          <option value="Consulta">Consulta</option>
+          <option value="Proyecto">Proyecto</option>
+          <option value="Colaboración">Colaboración</option>
+          <option value="Otro">Otro</option>
+        </select>
+        <span class="error-msg" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <label for="cMensaje">Mensaje</label>
+        <textarea id="cMensaje" rows="4" maxlength="500" placeholder="Escribe tu mensaje (mínimo 10 caracteres)"></textarea>
+        <div class="field-foot"><span class="error-msg" aria-live="polite"></span><span class="counter" id="cContador">0 / 500</span></div>
+      </div>
+      <div class="field">
+        <label class="check"><input type="checkbox" id="cAcepto"> Acepto que usen mis datos solo para responderme.</label>
+        <span class="error-msg" aria-live="polite"></span>
+      </div>
+      <input type="text" id="cWeb" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button type="submit" class="btn-pwa btn-pwa-accept" style="width:100%"><svg class="ic" aria-hidden="true"><use href="#i-paper-plane"/></svg> Enviar mensaje</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
